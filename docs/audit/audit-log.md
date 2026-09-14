@@ -2,6 +2,23 @@
 
 Record each update cycle in reverse chronological order.
 
+### Run: `2026-09-14T15:59:03Z`
+
+- Trigger: Expand README onboarding and overview content
+- Agent/Operator: Copilot Task Agent
+- Repositories checked: n/a (documentation enhancement run)
+- Repositories changed (main deltas found): n/a
+- Documentation files updated:
+  - `/README.md`
+  - `/docs/audit/audit-log.md`
+- Master documentation updated: `no`
+- Diagrams updated: `no` (existing rendered preview linked from README)
+- Agent instruction updates: `no`
+- Notes/Risks:
+  - README now includes guided navigation and diagram preview for new users.
+
+---
+
 ### Run: `2026-09-14T15:54:22Z`
 
 - Trigger: Add automation for draw.io export regeneration
