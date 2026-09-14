@@ -1,2 +1,24 @@
 # aq-dynamic-documentation
-A repo for managing and auto-updating dynamic documentation for the Air Quality services
+
+Dynamic documentation library for Air Quality services.
+
+## Purpose
+
+This repository stores service documentation only (no source code, no sensitive data) and is designed for repeatable AI-assisted updates.
+
+## Documentation Structure
+
+- `/docs/introduction.md` — repository scope and principles
+- `/docs/master/system-landscape.md` — how all services fit together and data flow summary
+- `/docs/repository-catalog.yaml` — tracked repositories and interrogation metadata
+- `/docs/services/citizen/` — Citizen primary service and sub-services
+- `/docs/services/data/` — Data primary service and sub-services
+- `/docs/services/_templates/` — reusable service documentation templates
+- `/docs/workflows/dynamic-update-workflow.md` — end-to-end update process
+- `/docs/agent-instructions/dynamic-update-instructions.md` — repeatable Copilot agent interrogation instructions
+- `/docs/diagrams/drawio-guidelines.md` — draw.io generation and update guidance
+- `/docs/audit/audit-log.md` — update history and audit trail
+
+## Operating Model
+
+The update process compares each tracked repository’s `main` branch against its last analysed commit/time, updates relevant service documentation, refreshes system-level docs and diagrams, and records outcomes in the audit log.
