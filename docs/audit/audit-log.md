@@ -2,6 +2,28 @@
 
 Record each update cycle in reverse chronological order.
 
+### Run: `2026-09-14T15:47:15Z`
+
+- Trigger: Implement automated AQIE metadata refresh using repository secret
+- Agent/Operator: Copilot Task Agent
+- Repositories checked: n/a (workflow/script scaffolding run)
+- Repositories changed (main deltas found): n/a
+- Documentation files updated:
+  - `/.github/workflows/refresh-aqie-repository-metadata.yml`
+  - `/scripts/update_aqie_repository_metadata.py`
+  - `/README.md`
+  - `/docs/workflows/dynamic-update-workflow.md`
+  - `/docs/agent-instructions/dynamic-update-instructions.md`
+  - `/docs/audit/audit-log.md`
+- Master documentation updated: `no`
+- Diagrams updated: `no`
+- Agent instruction updates: `yes`
+- Notes/Risks:
+  - Workflow requires repository secret `DEFRA_READONLY_PAT`.
+  - Connected services remain provisional until confirmed by service owners.
+
+---
+
 ### Run: `2026-09-14T14:25:26Z`
 
 - Trigger: AQIE repository inventory enrichment request

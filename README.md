@@ -21,6 +21,13 @@ This repository stores service documentation only (no source code, no sensitive 
 - `/docs/diagrams/src/` — draw.io source (`.drawio` XML)
 - `/docs/diagrams/export/` — rendered diagram assets (`.svg` / `.png`)
 - `/docs/audit/audit-log.md` — update history and audit trail
+- `/.github/workflows/refresh-aqie-repository-metadata.yml` — scheduled/manual AQIE metadata refresh
+
+## Required Secret for Metadata Refresh
+
+Add repository secret:
+
+- `DEFRA_READONLY_PAT` — read-only token with DEFRA SSO authorization
 
 ## Operating Model
 

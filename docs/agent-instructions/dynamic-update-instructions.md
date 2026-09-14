@@ -12,6 +12,7 @@ Run a repeatable, consistent update of Air Quality documentation using repositor
 - Master doc `/docs/master/system-landscape.md`
 - Diagram guidance `/docs/diagrams/drawio-guidelines.md`
 - Audit file `/docs/audit/audit-log.md`
+- Repository secret: `DEFRA_READONLY_PAT` (SSO-enabled read-only metadata access)
 
 ## Required Rules
 

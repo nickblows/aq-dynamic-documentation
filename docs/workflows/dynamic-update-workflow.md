@@ -2,6 +2,8 @@
 
 ## End-to-End Process
 
+Precondition: repository secret `DEFRA_READONLY_PAT` is configured for metadata collection workflows.
+
 1. Check each tracked repository for new commits merged into `main` since that repo’s `last_analysed_main_commit`.
    - Refresh metadata (`last_modified_at_utc`, `activity_status`, `type`, `connected_services`).
 2. For each changed repository, interrogate merged changes and update the relevant service documentation folder.
