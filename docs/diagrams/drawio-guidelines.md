@@ -31,6 +31,12 @@ On every documentation update cycle:
 2. Regenerate rendered exports (`.svg` minimum) from updated source.
 3. Commit both source and rendered files together.
 
+## Automation
+
+- Workflow: `/.github/workflows/regenerate-drawio-exports.yml`
+- Trigger: push changes to `/docs/diagrams/src/*.drawio` or manual dispatch
+- Output target: `/docs/diagrams/export/*.svg`
+
 ## Quality Checklist
 
 - Every changed service represented correctly

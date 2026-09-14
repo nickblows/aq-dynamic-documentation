@@ -2,6 +2,26 @@
 
 Record each update cycle in reverse chronological order.
 
+### Run: `2026-09-14T15:54:22Z`
+
+- Trigger: Add automation for draw.io export regeneration
+- Agent/Operator: Copilot Task Agent
+- Repositories checked: n/a (workflow enhancement run)
+- Repositories changed (main deltas found): n/a
+- Documentation files updated:
+  - `/.github/workflows/regenerate-drawio-exports.yml`
+  - `/README.md`
+  - `/docs/diagrams/drawio-guidelines.md`
+  - `/docs/workflows/dynamic-update-workflow.md`
+  - `/docs/audit/audit-log.md`
+- Master documentation updated: `no`
+- Diagrams updated: `no` (automation added; exports regenerate on workflow trigger)
+- Agent instruction updates: `no`
+- Notes/Risks:
+  - Export automation depends on `rlespinasse/drawio-export-action@v2` availability.
+
+---
+
 ### Run: `2026-09-14T15:47:15Z`
 
 - Trigger: Implement automated AQIE metadata refresh using repository secret

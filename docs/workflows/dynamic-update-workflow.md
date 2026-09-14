@@ -12,6 +12,7 @@ Precondition: repository secret `DEFRA_READONLY_PAT` is configured for metadata 
 5. Update agent instructions if process clarifications or improvements are required for the next run.
 6. Append/update the audit log with what changed, when, and why.
 7. Regenerate and commit both draw.io source and rendered diagram assets.
+   - Use workflow `/.github/workflows/regenerate-drawio-exports.yml` for SVG regeneration.
 
 ## Main-Branch Delta Rule
 
