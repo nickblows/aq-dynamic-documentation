@@ -1,24 +1,503 @@
-catalog_version: 1
-updated_at_utc: "2026-09-14T00:00:00Z"
+catalog_version: 2
+updated_at_utc: "2026-09-14T14:25:26Z"
 analysis_branch_policy: "main-only"
-
+discovery:
+  source_url: "https://github.com/orgs/DEFRA/repositories?language=&q=aqie&sort=&type=all"
+  source_org: "DEFRA"
+  source_query: "aqie"
+  discovered_at_utc: "2026-09-14T14:25:26Z"
+type_taxonomy:
+  - "Core Frontend Service"
+  - "Core Backend Service"
+  - "Auxilary Frontend"
+  - "Auxilary Backend Service"
+  - "Demo Service"
+  - "Prototype Service (including PoC)"
+  - "Quality/Test Service"
+  - "Data/Analytics Support Service"
+activity_status_rule:
+  active_days_max: 90
+  monitoring_days_max: 180
+  basis: "last_modified_at_utc from repository main-branch activity metadata"
 repositories:
+  - service_domain: "Shared"
+    service_name: "aqie-alert-back-end-service"
+    type: "Auxilary Backend Service"
+    repository_url: "https://github.com/DEFRA/aqie-alert-back-end-service"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-08-10T09:27:32.510Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "none-confirmed"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Shared"
+    service_name: "aqie-back-end"
+    type: "Core Backend Service"
+    repository_url: "https://github.com/DEFRA/aqie-back-end"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-08-25T15:30:38.854Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-front-end"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Shared"
+    service_name: "aqie-data-privatebeta-perftest"
+    type: "Quality/Test Service"
+    repository_url: "https://github.com/DEFRA/aqie-data-privatebeta-perftest"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-02-05T09:15:51.665Z"
+    activity_status: "Inactive"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-privatebeta-api-perftest"
+      - "aqie-privatebeta-perftest"
+      - "aqie-privatebeta-test"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
   - service_domain: "Citizen"
-    service_name: "REPLACE_ME"
-    service_type: "Primary"
-    repository_url: "https://github.com/REPLACE_ME/REPLACE_ME"
+    service_name: "aqie-dataselector-frontend"
+    type: "Auxilary Frontend"
+    repository_url: "https://github.com/DEFRA/aqie-dataselector-frontend"
     default_branch: "main"
-    documentation_path: "/docs/services/citizen/overview.md"
+    created_at_utc: null
+    last_modified_at_utc: "2026-09-11T09:54:07.297Z"
+    activity_status: "Active"
     last_analysed_at_utc: null
     last_analysed_main_commit: null
-    status: "pending-initial-baseline"
-
+    connected_services:
+      - "none-confirmed"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Citizen"
+    service_name: "aqie-dc-admin-frontend"
+    type: "Auxilary Frontend"
+    repository_url: "https://github.com/DEFRA/aqie-dc-admin-frontend"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-09-14T13:09:25.512Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-dc-backend"
+      - "aqie-dc-frontend"
+      - "aqie-dc-poc-backend"
+      - "aqie-dc-poc-frontend"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
   - service_domain: "Data"
-    service_name: "REPLACE_ME"
-    service_type: "Primary"
-    repository_url: "https://github.com/REPLACE_ME/REPLACE_ME"
+    service_name: "aqie-dc-backend"
+    type: "Auxilary Backend Service"
+    repository_url: "https://github.com/DEFRA/aqie-dc-backend"
     default_branch: "main"
-    documentation_path: "/docs/services/data/overview.md"
+    created_at_utc: null
+    last_modified_at_utc: "2026-09-14T14:18:32.112Z"
+    activity_status: "Active"
     last_analysed_at_utc: null
     last_analysed_main_commit: null
-    status: "pending-initial-baseline"
+    connected_services:
+      - "aqie-dc-admin-frontend"
+      - "aqie-dc-frontend"
+      - "aqie-dc-poc-backend"
+      - "aqie-dc-poc-frontend"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Citizen"
+    service_name: "aqie-dc-frontend"
+    type: "Auxilary Frontend"
+    repository_url: "https://github.com/DEFRA/aqie-dc-frontend"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-07-02T15:58:33.821Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-dc-admin-frontend"
+      - "aqie-dc-backend"
+      - "aqie-dc-poc-backend"
+      - "aqie-dc-poc-frontend"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Data"
+    service_name: "aqie-dc-poc-backend"
+    type: "Prototype Service (including PoC)"
+    repository_url: "https://github.com/DEFRA/aqie-dc-poc-backend"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-05-21T12:50:50.934Z"
+    activity_status: "Monitoring"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-dc-admin-frontend"
+      - "aqie-dc-backend"
+      - "aqie-dc-frontend"
+      - "aqie-dc-poc-frontend"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Citizen"
+    service_name: "aqie-dc-poc-frontend"
+    type: "Prototype Service (including PoC)"
+    repository_url: "https://github.com/DEFRA/aqie-dc-poc-frontend"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-05-20T14:18:18.951Z"
+    activity_status: "Monitoring"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-dc-admin-frontend"
+      - "aqie-dc-backend"
+      - "aqie-dc-frontend"
+      - "aqie-dc-poc-backend"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Shared"
+    service_name: "aqie-demo-data-visualisations"
+    type: "Demo Service"
+    repository_url: "https://github.com/DEFRA/aqie-demo-data-visualisations"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-09-09T10:12:35.559Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "none-confirmed"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Citizen"
+    service_name: "aqie-docanalysisawspoc-frontend"
+    type: "Prototype Service (including PoC)"
+    repository_url: "https://github.com/DEFRA/aqie-docanalysisawspoc-frontend"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2025-12-17T16:13:46.229Z"
+    activity_status: "Inactive"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-docanalysispoc-backend"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Data"
+    service_name: "aqie-docanalysispoc-backend"
+    type: "Prototype Service (including PoC)"
+    repository_url: "https://github.com/DEFRA/aqie-docanalysispoc-backend"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2025-10-29T16:38:02.459Z"
+    activity_status: "Inactive"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-docanalysisawspoc-frontend"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Data"
+    service_name: "aqie-forecast-api"
+    type: "Auxilary Backend Service"
+    repository_url: "https://github.com/DEFRA/aqie-forecast-api"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-08-06T12:14:30.858Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "none-confirmed"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Citizen"
+    service_name: "aqie-front-end"
+    type: "Core Frontend Service"
+    repository_url: "https://github.com/DEFRA/aqie-front-end"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-09-02T16:32:09.288Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-back-end"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Data"
+    service_name: "aqie-historicaldata-backend"
+    type: "Auxilary Backend Service"
+    repository_url: "https://github.com/DEFRA/aqie-historicaldata-backend"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-09-09T12:26:29.733Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "none-confirmed"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Citizen"
+    service_name: "aqie-kpi-metrics-dashboard"
+    type: "Data/Analytics Support Service"
+    repository_url: "https://github.com/DEFRA/aqie-kpi-metrics-dashboard"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-03-11T11:30:17.163Z"
+    activity_status: "Inactive"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "none-confirmed"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Citizen"
+    service_name: "aqie-laqm-data-explorer"
+    type: "Data/Analytics Support Service"
+    repository_url: "https://github.com/DEFRA/aqie-laqm-data-explorer"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-07-08T14:17:40.947Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "none-confirmed"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Data"
+    service_name: "aqie-location-backend"
+    type: "Auxilary Backend Service"
+    repository_url: "https://github.com/DEFRA/aqie-location-backend"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-05-19T15:33:04.220Z"
+    activity_status: "Monitoring"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "none-confirmed"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Citizen"
+    service_name: "aqie-maps-frontend"
+    type: "Auxilary Frontend"
+    repository_url: "https://github.com/DEFRA/aqie-maps-frontend"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-08-26T16:03:37.757Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-maps-prototype"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Citizen"
+    service_name: "aqie-maps-prototype"
+    type: "Prototype Service (including PoC)"
+    repository_url: "https://github.com/DEFRA/aqie-maps-prototype"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-06-05T15:34:10.158Z"
+    activity_status: "Monitoring"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-maps-frontend"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Data"
+    service_name: "aqie-monitoringstation-backend"
+    type: "Auxilary Backend Service"
+    repository_url: "https://github.com/DEFRA/aqie-monitoringstation-backend"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-03-18T12:22:54.216Z"
+    activity_status: "Monitoring"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "none-confirmed"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Data"
+    service_name: "aqie-notify-service"
+    type: "Auxilary Backend Service"
+    repository_url: "https://github.com/DEFRA/aqie-notify-service"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-05-28T09:00:34.692Z"
+    activity_status: "Monitoring"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "none-confirmed"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Data"
+    service_name: "aqie-privatebeta-api-perftest"
+    type: "Quality/Test Service"
+    repository_url: "https://github.com/DEFRA/aqie-privatebeta-api-perftest"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-07-23T22:15:54.586Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-data-privatebeta-perftest"
+      - "aqie-privatebeta-perftest"
+      - "aqie-privatebeta-test"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Shared"
+    service_name: "aqie-privatebeta-perftest"
+    type: "Quality/Test Service"
+    repository_url: "https://github.com/DEFRA/aqie-privatebeta-perftest"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-08-19T07:55:40.781Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-data-privatebeta-perftest"
+      - "aqie-privatebeta-api-perftest"
+      - "aqie-privatebeta-test"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Shared"
+    service_name: "aqie-privatebeta-test"
+    type: "Quality/Test Service"
+    repository_url: "https://github.com/DEFRA/aqie-privatebeta-test"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-08-06T12:22:45.137Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-data-privatebeta-perftest"
+      - "aqie-privatebeta-api-perftest"
+      - "aqie-privatebeta-perftest"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Data"
+    service_name: "aqie-prtr-backend"
+    type: "Auxilary Backend Service"
+    repository_url: "https://github.com/DEFRA/aqie-prtr-backend"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-07-23T14:42:38.834Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-prtr-frontend"
+      - "aqie-prtr-journey-tests"
+      - "aqie-prtr-perftest"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Citizen"
+    service_name: "aqie-prtr-frontend"
+    type: "Auxilary Frontend"
+    repository_url: "https://github.com/DEFRA/aqie-prtr-frontend"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-07-23T14:42:19.757Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-prtr-backend"
+      - "aqie-prtr-journey-tests"
+      - "aqie-prtr-perftest"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Shared"
+    service_name: "aqie-prtr-journey-tests"
+    type: "Quality/Test Service"
+    repository_url: "https://github.com/DEFRA/aqie-prtr-journey-tests"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-08-21T16:13:06.892Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-prtr-backend"
+      - "aqie-prtr-frontend"
+      - "aqie-prtr-perftest"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Shared"
+    service_name: "aqie-prtr-perftest"
+    type: "Quality/Test Service"
+    repository_url: "https://github.com/DEFRA/aqie-prtr-perftest"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2026-06-19T12:09:53.132Z"
+    activity_status: "Active"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "aqie-prtr-backend"
+      - "aqie-prtr-frontend"
+      - "aqie-prtr-journey-tests"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"
+  - service_domain: "Shared"
+    service_name: "aqie-publicbeta-test"
+    type: "Quality/Test Service"
+    repository_url: "https://github.com/DEFRA/aqie-publicbeta-test"
+    default_branch: "main"
+    created_at_utc: null
+    last_modified_at_utc: "2025-11-28T14:29:48.379Z"
+    activity_status: "Inactive"
+    last_analysed_at_utc: null
+    last_analysed_main_commit: null
+    connected_services:
+      - "none-confirmed"
+    documentation_path: null
+    metadata_notes:
+      - "created_at_utc requires SSO-enabled API interrogation for precise value"

@@ -23,6 +23,14 @@ Keep architecture and data-flow diagrams synchronised with documentation updates
 - Source diagrams: `/docs/diagrams/src/*.drawio`
 - Exported outputs: `/docs/diagrams/export/*.svg` (or `.png`)
 
+## Regeneration Requirement
+
+On every documentation update cycle:
+
+1. Update `.drawio` source files first.
+2. Regenerate rendered exports (`.svg` minimum) from updated source.
+3. Commit both source and rendered files together.
+
 ## Quality Checklist
 
 - Every changed service represented correctly

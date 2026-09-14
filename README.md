@@ -11,12 +11,15 @@ This repository stores service documentation only (no source code, no sensitive 
 - `/docs/introduction.md` — repository scope and principles
 - `/docs/master/system-landscape.md` — how all services fit together and data flow summary
 - `/docs/repository-catalog.yaml` — tracked repositories and interrogation metadata
+- `/docs/repositories/aqie-repository-inventory.md` — current AQIE repository inventory snapshot
 - `/docs/services/citizen/` — Citizen primary service and sub-services
 - `/docs/services/data/` — Data primary service and sub-services
 - `/docs/services/_templates/` — reusable service documentation templates
 - `/docs/workflows/dynamic-update-workflow.md` — end-to-end update process
 - `/docs/agent-instructions/dynamic-update-instructions.md` — repeatable Copilot agent interrogation instructions
 - `/docs/diagrams/drawio-guidelines.md` — draw.io generation and update guidance
+- `/docs/diagrams/src/` — draw.io source (`.drawio` XML)
+- `/docs/diagrams/export/` — rendered diagram assets (`.svg` / `.png`)
 - `/docs/audit/audit-log.md` — update history and audit trail
 
 ## Operating Model

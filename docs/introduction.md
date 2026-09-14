@@ -23,6 +23,17 @@ For each service and sub-service, document:
 5. Repository metadata (URL, branch scope, last analysed details)
 6. Key integrations and data flows
 
+## Standard Repository Metadata
+
+Each tracked repository should include:
+
+- Repository URL
+- Date created (`created_at_utc`)
+- Date last modified (`last_modified_at_utc`, derived from main-branch activity)
+- Active status (`Active` / `Monitoring` / `Inactive`)
+- Type classification
+- Connected services
+
 ## Primary Service Domains
 
 - Citizen Services
