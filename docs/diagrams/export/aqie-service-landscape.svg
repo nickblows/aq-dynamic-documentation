@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="500" viewBox="0 0 1100 500">
+  <rect width="1100" height="500" fill="#ffffff"/>
+  <text x="550" y="45" text-anchor="middle" font-family="Arial" font-size="28" font-weight="700">AQIE Dynamic Service Landscape</text>
+  <rect x="90" y="120" width="280" height="140" rx="12" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/>
+  <text x="230" y="175" text-anchor="middle" font-family="Arial" font-size="22" font-weight="700">Citizen Services</text>
+  <text x="230" y="205" text-anchor="middle" font-family="Arial" font-size="18">11 repos</text>
+  <rect x="410" y="120" width="280" height="140" rx="12" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+  <text x="550" y="175" text-anchor="middle" font-family="Arial" font-size="22" font-weight="700">Data Services</text>
+  <text x="550" y="205" text-anchor="middle" font-family="Arial" font-size="18">11 repos</text>
+  <rect x="730" y="120" width="280" height="140" rx="12" fill="#fff2cc" stroke="#d6b656" stroke-width="2"/>
+  <text x="870" y="170" text-anchor="middle" font-family="Arial" font-size="20" font-weight="700">Shared/Test/Prototype</text>
+  <text x="870" y="200" text-anchor="middle" font-family="Arial" font-size="18">8 repos</text>
+  <rect x="360" y="320" width="380" height="120" rx="8" fill="#f8cecc" stroke="#b85450" stroke-width="2"/>
+  <text x="550" y="370" text-anchor="middle" font-family="Arial" font-size="21" font-weight="700">Inventory Source</text>
+  <text x="550" y="402" text-anchor="middle" font-family="Arial" font-size="16">/docs/repository-catalog.yaml</text>
+  <line x1="230" y1="260" x2="470" y2="320" stroke="#6c8ebf" stroke-width="2"/>
+  <line x1="550" y1="260" x2="550" y2="320" stroke="#82b366" stroke-width="2"/>
+  <line x1="870" y1="260" x2="630" y2="320" stroke="#d6b656" stroke-width="2"/>
+</svg>

@@ -1,0 +1,36 @@
+name: Regenerate draw.io exports
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "docs/diagrams/src/*.drawio"
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Export draw.io diagrams to SVG
+        uses: rlespinasse/drawio-export-action@v2
+        with:
+          path: docs/diagrams/src
+          output: docs/diagrams/export
+          format: svg
+
+      - name: Commit and push if changed
+        run: |
+          if git diff --quiet; then
+            echo "No diagram export changes detected."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/diagrams/export/*.svg
+          git commit -m "Regenerate draw.io SVG exports"
+          git push
