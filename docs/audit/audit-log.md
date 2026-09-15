@@ -2,6 +2,23 @@
 
 Record each update cycle in reverse chronological order.
 
+### Run: `2026-09-15T09:35:54Z`
+
+- Trigger: Add README quick links for core documentation
+- Agent/Operator: Copilot Task Agent
+- Repositories checked: n/a (documentation enhancement run)
+- Repositories changed (main deltas found): n/a
+- Documentation files updated:
+  - `/README.md`
+  - `/docs/audit/audit-log.md`
+- Master documentation updated: `no`
+- Diagrams updated: `no`
+- Agent instruction updates: `no`
+- Notes/Risks:
+  - Quick Links section added to speed first-time navigation.
+
+---
+
 ### Run: `2026-09-15T08:43:52Z`
 
 - Trigger: Improve README navigation with clickable document links
