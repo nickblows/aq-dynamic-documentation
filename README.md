@@ -35,32 +35,32 @@ Rendered preview:
 
 Diagram files:
 
-- Source XML: `/docs/diagrams/src/aqie-service-landscape.drawio`
-- Rendered asset: `/docs/diagrams/export/aqie-service-landscape.svg`
+- Source XML: [`/docs/diagrams/src/aqie-service-landscape.drawio`](docs/diagrams/src/aqie-service-landscape.drawio)
+- Rendered asset: [`/docs/diagrams/export/aqie-service-landscape.svg`](docs/diagrams/export/aqie-service-landscape.svg)
 
 ## Start Here (New Users)
 
-1. Read `/docs/introduction.md`
-2. Review `/docs/master/system-landscape.md`
-3. Open `/docs/repositories/aqie-repository-inventory.md` for current repo inventory
-4. Inspect `/docs/repository-catalog.yaml` for metadata fields and update state
-5. Explore domain folders under `/docs/services/citizen/` and `/docs/services/data/`
-6. Review `/docs/workflows/dynamic-update-workflow.md` and `/docs/agent-instructions/dynamic-update-instructions.md`
-7. Check `/docs/audit/audit-log.md` for historical update cycles
+1. Read [`/docs/introduction.md`](docs/introduction.md)
+2. Review [`/docs/master/system-landscape.md`](docs/master/system-landscape.md)
+3. Open [`/docs/repositories/aqie-repository-inventory.md`](docs/repositories/aqie-repository-inventory.md) for current repo inventory
+4. Inspect [`/docs/repository-catalog.yaml`](docs/repository-catalog.yaml) for metadata fields and update state
+5. Explore domain folders under [`/docs/services/citizen/`](docs/services/citizen/) and [`/docs/services/data/`](docs/services/data/)
+6. Review [`/docs/workflows/dynamic-update-workflow.md`](docs/workflows/dynamic-update-workflow.md) and [`/docs/agent-instructions/dynamic-update-instructions.md`](docs/agent-instructions/dynamic-update-instructions.md)
+7. Check [`/docs/audit/audit-log.md`](docs/audit/audit-log.md) for historical update cycles
 
 ## Documentation Map
 
-- `/docs/introduction.md` — repository scope and principles
-- `/docs/master/system-landscape.md` — how all services fit together and data flow summary
-- `/docs/repository-catalog.yaml` — tracked repositories and interrogation metadata
-- `/docs/repositories/aqie-repository-inventory.md` — current AQIE inventory snapshot
-- `/docs/services/citizen/overview.md` — Citizen domain overview
-- `/docs/services/citizen/sub-services.md` — Citizen sub-service structure
-- `/docs/services/data/overview.md` — Data domain overview
-- `/docs/services/data/sub-services.md` — Data sub-service structure
-- `/docs/services/_templates/service-profile-template.md` — reusable service profile template
-- `/docs/diagrams/drawio-guidelines.md` — diagram governance and regeneration rules
-- `/docs/audit/audit-log.md` — change history and audit trail
+- [`/docs/introduction.md`](docs/introduction.md) — repository scope and principles
+- [`/docs/master/system-landscape.md`](docs/master/system-landscape.md) — how all services fit together and data flow summary
+- [`/docs/repository-catalog.yaml`](docs/repository-catalog.yaml) — tracked repositories and interrogation metadata
+- [`/docs/repositories/aqie-repository-inventory.md`](docs/repositories/aqie-repository-inventory.md) — current AQIE inventory snapshot
+- [`/docs/services/citizen/overview.md`](docs/services/citizen/overview.md) — Citizen domain overview
+- [`/docs/services/citizen/sub-services.md`](docs/services/citizen/sub-services.md) — Citizen sub-service structure
+- [`/docs/services/data/overview.md`](docs/services/data/overview.md) — Data domain overview
+- [`/docs/services/data/sub-services.md`](docs/services/data/sub-services.md) — Data sub-service structure
+- [`/docs/services/_templates/service-profile-template.md`](docs/services/_templates/service-profile-template.md) — reusable service profile template
+- [`/docs/diagrams/drawio-guidelines.md`](docs/diagrams/drawio-guidelines.md) — diagram governance and regeneration rules
+- [`/docs/audit/audit-log.md`](docs/audit/audit-log.md) — change history and audit trail
 
 ## How Updates Work
 
@@ -73,15 +73,15 @@ At a high level:
 5. Regenerate diagrams
 6. Record the run in the audit log
 
-Detailed process: `/docs/workflows/dynamic-update-workflow.md`
+Detailed process: [`/docs/workflows/dynamic-update-workflow.md`](docs/workflows/dynamic-update-workflow.md)
 
 ## Automation in This Repository
 
-- `/.github/workflows/refresh-aqie-repository-metadata.yml`
+- [`/.github/workflows/refresh-aqie-repository-metadata.yml`](.github/workflows/refresh-aqie-repository-metadata.yml)
   - Refreshes AQIE repository metadata and regenerates:
     - `/docs/repository-catalog.yaml`
     - `/docs/repositories/aqie-repository-inventory.md`
-- `/.github/workflows/regenerate-drawio-exports.yml`
+- [`/.github/workflows/regenerate-drawio-exports.yml`](.github/workflows/regenerate-drawio-exports.yml)
   - Regenerates rendered diagram assets from `/docs/diagrams/src/*.drawio`
 
 ### Required Secret for Metadata Refresh

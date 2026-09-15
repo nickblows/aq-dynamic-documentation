@@ -2,6 +2,23 @@
 
 Record each update cycle in reverse chronological order.
 
+### Run: `2026-09-15T08:43:52Z`
+
+- Trigger: Improve README navigation with clickable document links
+- Agent/Operator: Copilot Task Agent
+- Repositories checked: n/a (documentation enhancement run)
+- Repositories changed (main deltas found): n/a
+- Documentation files updated:
+  - `/README.md`
+  - `/docs/audit/audit-log.md`
+- Master documentation updated: `no`
+- Diagrams updated: `no`
+- Agent instruction updates: `no`
+- Notes/Risks:
+  - README document references are now clickable for quicker navigation.
+
+---
+
 ### Run: `2026-09-14T15:59:03Z`
 
 - Trigger: Expand README onboarding and overview content
