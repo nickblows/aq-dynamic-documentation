@@ -1,0 +1,1603 @@
+# AQIE Integration Catalogue
+#
+# Single source of truth for service-to-service and service-to-external edges.
+# Diagrams under /docs/diagrams are generated from this file — edit here, not there.
+#
+# Evidence policy:
+#   Every integration MUST cite evidence (repo + file + line) taken from the
+#   default branch of the source repository. Test fixtures and mock URLs are NOT
+#   acceptable evidence. Where an edge is asserted without code evidence it MUST
+#   be marked confidence: provisional and carry an open question.
+#
+# Security policy:
+#   Record authentication MECHANISM and credential VARIABLE NAMES only.
+#   Never record credential values, tokens, keys or endpoints containing secrets.
+
+catalog_version: 1
+updated_at_utc: "2026-09-15T00:00:00Z"
+analysis_branch_policy: "main-only"
+
+confidence_levels:
+  confirmed: "Endpoint and caller identified in non-test source on the default branch"
+  provisional: "Edge indicated by configuration key or naming, target not fully verified"
+  inferred: "Edge assumed from architecture/topology, requires owner confirmation"
+
+target_kinds:
+  aqie-service: "Another repository in this catalogue"
+  external: "Third-party or cross-government system outside AQIE"
+  datastore: "Backing store owned by the source service"
+  platform: "DEFRA CDP shared platform capability"
+
+# ---------------------------------------------------------------------------
+# External and platform systems referenced by AQIE services
+# ---------------------------------------------------------------------------
+external_systems:
+  - id: ricardo-ukair
+    name: "Ricardo UK-AIR API"
+    owner: "Ricardo Energy & Environment (on behalf of DEFRA)"
+    description: >-
+      Authoritative source for UK air quality monitoring station metadata and
+      pollutant measurement data (AURN and affiliated networks).
+    hosts:
+      - "uk-air-api.staging.rcdo.co.uk"
+      - "api-ukair.defra.gov.uk"
+    auth: "Login endpoint exchanges credentials for a bearer token"
+    credential_vars: ["RICARDO_API_EMAIL", "RICARDO_API_PASSWORD", "RICARDO_API_KEY"]
+
+  - id: ukair-website
+    name: "DEFRA UK-AIR public website"
+    owner: "DEFRA"
+    description: "Public UK-AIR site providing the national forecast text summary."
+    hosts: ["uk-air.defra.gov.uk"]
+    auth: "None (public endpoint)"
+
+  - id: ukair-atom
+    name: "DEFRA UK-AIR INSPIRE Atom download service"
+    owner: "DEFRA"
+    description: >-
+      Public INSPIRE-compliant Atom download service publishing historic fixed
+      observation data as OM-SWE XML, per site and per year.
+    hosts: ["uk-air.defra.gov.uk/data/atom-dls"]
+    auth: "None (public endpoint)"
+
+  - id: os-names
+    name: "Ordnance Survey Names API"
+    owner: "Ordnance Survey"
+    description: "Place-name and gazetteer search used to resolve user location input."
+    hosts: ["api.os.uk"]
+    auth: "API key"
+    credential_vars: ["OS_NAMES_API_KEY", "OSPLACE_API_KEY"]
+
+  - id: postcodes-io
+    name: "postcodes.io"
+    owner: "Ideal Postcodes (open service)"
+    description: "Reverse geocoding of coordinates to postcode and local authority."
+    hosts: ["api.postcodes.io"]
+    auth: "None (public endpoint)"
+
+  - id: govuk-notify
+    name: "GOV.UK Notify"
+    owner: "GDS"
+    description: "Transactional email and SMS delivery for air quality alerts."
+    hosts: ["api.notifications.service.gov.uk"]
+    auth: "API key"
+    credential_vars: ["NOTIFY_API_KEY"]
+
+  - id: met-office-sftp
+    name: "Met Office forecast SFTP"
+    owner: "Met Office"
+    description: "Scheduled drop of air quality forecast files collected over SFTP."
+    protocol: "SFTP"
+    auth: "SSH private key"
+    credential_vars: ["SSH_PRIVATE_KEY", "MET_OFFICE_DIRECTORY"]
+
+  - id: azure-entra
+    name: "Microsoft Entra ID"
+    owner: "DEFRA IT"
+    description: "Staff authentication for internal admin interfaces."
+    hosts: ["login.microsoftonline.com"]
+    auth: "OpenID Connect / MSAL"
+
+  - id: qualtrics
+    name: "Qualtrics"
+    owner: "DEFRA (survey tenant)"
+    description: "User feedback survey linked from citizen-facing pages."
+    hosts: ["defragroup.eu.qualtrics.com"]
+    auth: "None (outbound link only)"
+
+  - id: cdp-uploader
+    name: "CDP Uploader"
+    owner: "DEFRA Core Delivery Platform"
+    kind: platform
+    description: >-
+      Shared CDP service providing virus-scanned file upload with callback
+      notification to the owning service.
+    hosts: ["cdp-uploader.<env>.cdp-int.defra.cloud"]
+    auth: "Platform-internal network"
+
+  - id: laqm-portal
+    name: "LAQM Portal API"
+    owner: "Operator unconfirmed — see oq-007"
+    description: >-
+      Local Air Quality Management portal providing local authority reference
+      data, declared air quality management areas and annual status report data.
+    hosts: ["www.laqmportal.co.uk"]
+    auth: "X-API-Key and X-API-PartnerId headers"
+    credential_vars: ["LAQM_API_KEY", "LAQMAPIKEY", "LAQMAPIPARTNERID"]
+
+  - id: defra-sos
+    name: "DEFRA Sensor Observation Service (SOS)"
+    owner: "DEFRA"
+    description: >-
+      Public OGC Sensor Observation Service exposing historic hourly air quality
+      observations for UK monitoring sites.
+    hosts: ["uk-air.defra.gov.uk/sos-ukair"]
+    auth: "None (public endpoint)"
+
+  - id: os-places-ni
+    name: "Ordnance Survey Places (Northern Ireland)"
+    owner: "Ordnance Survey"
+    description: "Northern Ireland postcode and address lookup, authenticated via Entra ID."
+    hosts: ["api.os.uk"]
+    auth: "OAuth2 bearer token obtained from Microsoft Entra ID"
+
+  - id: openfreemap
+    name: "OpenFreeMap"
+    owner: "Third party (open source tile service)"
+    description: "Browser-side vector map tiles and styles for interactive maps."
+    hosts: ["tiles.openfreemap.org"]
+    auth: "None (public endpoint)"
+
+  - id: google-tag-manager
+    name: "Google Tag Manager / Google Analytics"
+    owner: "DEFRA analytics tenant"
+    description: "Browser-side usage analytics, loaded only after cookie consent."
+    hosts: ["googletagmanager.com"]
+    auth: "None (measurement ID)"
+
+  - id: defra-forms
+    name: "DEFRA Forms"
+    owner: "DEFRA Forms team"
+    description: >-
+      Cross-government form builder. Publishes smoke control application
+      submissions onto an SQS queue consumed by aqie-dc-backend.
+    protocol: "AWS SQS"
+    auth: "IAM task role"
+
+  - id: model-providers
+    name: "Azure OpenAI and AWS Bedrock"
+    owner: "DEFRA (Azure tenant) / AWS"
+    description: >-
+      Large language model providers used by the archived document analysis
+      proof of concept for business case summarisation.
+    auth: "API key or IAM"
+    credential_vars: ["OPEN_AI_KEY", "AZURE_CLIENT_SECRET", "BEARER_TOKEN_BEDROCK"]
+
+# ---------------------------------------------------------------------------
+# Integrations
+# ---------------------------------------------------------------------------
+integrations:
+
+  # --- Core citizen journey -------------------------------------------------
+  - id: front-end__back-end
+    source: aqie-front-end
+    target: aqie-back-end
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Retrieve pollutant measurements and monitoring station detail for the location the citizen searched."
+    endpoints:
+      - method: GET
+        path: /measurements
+        data: "Per-station pollutant concentrations and DAQI bands"
+      - method: GET
+        path: /monitoringStationInfo
+        data: "Monitoring station metadata, coordinates, pollutants measured"
+    auth: "CDP internal network; no application-level auth observed"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-front-end
+        file: src/config/index.js
+        lines: "412,418"
+
+  - id: front-end__forecast-api
+    source: aqie-front-end
+    target: aqie-forecast-api
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Retrieve the multi-day air quality forecast shown on location pages."
+    endpoints:
+      - method: GET
+        path: /forecast
+        data: "Forecast DAQI values by day and region"
+    auth: "CDP internal network"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-front-end
+        file: src/config/index.js
+        lines: "360"
+
+  - id: front-end__os-names
+    source: aqie-front-end
+    target: os-names
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Resolve free-text place names entered by citizens into coordinates."
+    endpoints:
+      - method: GET
+        path: /search/names/v1/find
+        data: "Query string in; gazetteer matches with coordinates out"
+    auth: "API key"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-front-end
+        file: src/config/index.js
+        lines: "258"
+
+  - id: front-end__ukair-website
+    source: aqie-front-end
+    target: ukair-website
+    target_kind: external
+    protocol: HTTPS
+    direction: outbound
+    interaction: synchronous
+    purpose: "Fetch the national forecast text summary published by UK-AIR."
+    endpoints:
+      - method: GET
+        path: /ajax/forecast_text_summary.php
+        data: "HTML/text forecast narrative"
+    auth: "None"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-front-end
+        file: src/config/index.js
+        lines: "424"
+
+  - id: front-end__qualtrics
+    source: aqie-front-end
+    target: qualtrics
+    target_kind: external
+    protocol: HTTPS
+    direction: outbound
+    interaction: user-redirect
+    purpose: "Link citizens to the feedback survey."
+    data_exchanged: "No service data; user follows an outbound link"
+    auth: "None"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-front-end
+        file: src/config/index.js
+        lines: "245"
+
+  # --- Core data acquisition ------------------------------------------------
+  - id: back-end__ricardo
+    source: aqie-back-end
+    target: ricardo-ukair
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: scheduled-batch
+    purpose: "Ingest monitoring station metadata and pollutant measurements into MongoDB on a cron schedule."
+    endpoints:
+      - method: POST
+        path: /api/login_check
+        data: "Credentials exchanged for bearer token"
+      - method: GET
+        path: /api/pollutant_measurement_datas
+        data: "Time-series pollutant concentrations per station"
+      - method: GET
+        path: /api/pollutant_metadatas
+        data: "Pollutant definitions, units, thresholds"
+      - method: GET
+        path: /api/site_meta_datas
+        data: "Monitoring site metadata"
+    schedule_vars: ["AURN_SCHEDULE", "POLLUTANTS_SCHEDULE", "MONITORING_STATIONS_SCHEDULE"]
+    auth: "Username/password login exchanged for bearer token"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-back-end
+        file: src/config/index.js
+        lines: "Ricardo URL block"
+      - repo: aqie-back-end
+        file: src/api/aurn/fetch-aurn-measurements.js
+
+  - id: back-end__postcodes-io
+    source: aqie-back-end
+    target: postcodes-io
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Resolve station coordinates to the owning local authority."
+    endpoints:
+      - method: GET
+        path: /postcodes
+        data: "lat/lon and radius in; postcode and local authority out"
+    auth: "None"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-back-end
+        file: src/api/locationsite/helpers/get-local-authority.js
+
+  - id: back-end__met-office
+    source: aqie-back-end
+    target: met-office-sftp
+    target_kind: external
+    protocol: SFTP
+    direction: inbound-pull
+    interaction: scheduled-batch
+    purpose: "Collect Met Office air quality forecast files and expose them via the SFTP API routes."
+    data_exchanged: "Forecast data files retrieved from a configured remote directory"
+    schedule_vars: ["FORECAST_SCHEDULE"]
+    auth: "SSH private key"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-back-end
+        file: src/api/metOfficeForecast/index.js
+
+  - id: back-end__govuk-notify
+    source: aqie-back-end
+    target: govuk-notify
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Send notifications from the back-end service."
+    auth: "API key"
+    confidence: provisional
+    open_question: "Confirm whether notification sending is active here or fully delegated to aqie-notify-service."
+    evidence:
+      - repo: aqie-back-end
+        file: src/config/index.js
+        lines: "NOTIFY_BASE_URL"
+
+  - id: forecast-api__met-office
+    source: aqie-forecast-api
+    target: met-office-sftp
+    target_kind: external
+    protocol: SFTP
+    direction: inbound-pull
+    interaction: scheduled-batch
+    purpose: "Poll the Met Office directory for new forecast files, parse and persist them for the /forecast endpoint."
+    data_exchanged: "XML forecast files parsed into forecast documents"
+    schedule_vars: ["FORECAST_SCHEDULE", "FORECAST_RETRY_INTERVAL", "MET_OFFICE_DIRECTORY"]
+    auth: "SSH private key"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-forecast-api
+        file: src/forecast/batch-scheduler/runForecastSyncJob.js
+
+  # --- Location and station resolution -------------------------------------
+  - id: location-backend__os-names
+    source: aqie-location-backend
+    target: os-names
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Back the /osnameplaces endpoint with Ordnance Survey gazetteer search."
+    endpoints:
+      - method: GET
+        path: /search/names/v1/find
+        data: "Place-name query in; matched places with coordinates out"
+    auth: "API key"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-location-backend
+        file: src/config/index.js
+        lines: "OS_NAMES_API_URL"
+
+  - id: monitoringstation-backend__back-end
+    source: aqie-monitoringstation-backend
+    target: aqie-back-end
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Enrich monitoring station responses with station metadata."
+    endpoints:
+      - method: GET
+        path: "/monitoringStationInfo?with-closed=true&with-pollutants=1&stream=data"
+        data: "Full station metadata including closed sites and pollutant coverage"
+    auth: "CDP internal network"
+    confidence: confirmed
+    notes: >-
+      A /measurements variant exists only as a commented-out alternative default on the
+      analysed commit. The endpoint is supplied by the overridable RICARDO_API_URL
+      variable, so either could be in use at runtime — see oq-014.
+    evidence:
+      - repo: aqie-monitoringstation-backend
+        file: src/config/index.js
+
+  - id: monitoringstation-backend__location-backend
+    source: aqie-monitoringstation-backend
+    target: aqie-location-backend
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Resolve a user location string to coordinates before finding nearby stations."
+    endpoints:
+      - method: POST
+        path: /osnameplaces
+        data: "Location query in; gazetteer matches out"
+    auth: "CDP internal network"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-monitoringstation-backend
+        file: src/config/index.js
+
+  # --- Historic data download journey --------------------------------------
+  - id: dataselector-frontend__historicaldata-backend
+    source: aqie-dataselector-frontend
+    target: aqie-historicaldata-backend
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: >-
+      Drive the historic data selection and download journey: browse pollutant
+      catalogues, request extracts, poll job status and obtain download links.
+    endpoints:
+      - method: POST
+        path: /AtomDataSelection
+        data: "Selection criteria (pollutants, years, sites) in; extract job reference out"
+      - method: POST
+        path: /AtomDataSelectionJobStatus
+        data: "Job reference in; job state out"
+      - method: GET
+        path: /AtomDataSelectionPollutantMaster
+        data: "Master list of selectable pollutants"
+      - method: POST
+        path: /AtomDataSelectionPollutantDataSource
+        data: "Pollutant data sources available for selection"
+      - method: POST
+        path: /AtomDataSelectionPresignedUrlMail
+        data: "Job reference in; pre-signed download URL issued by email"
+      - method: POST
+        path: /AtomEmailJobDataSelection
+        data: "Email delivery request for a completed extract"
+      - method: POST
+        path: /AtomHistoryHourlydata
+        data: "Hourly historic measurement series"
+      - method: POST
+        path: /AtomHistoryexceedence
+        data: "Exceedence statistics for the selected criteria"
+    auth: "CDP internal network"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-dataselector-frontend
+        file: src/config/config.js
+        lines: "264-368"
+
+  - id: dataselector-frontend__location-backend
+    source: aqie-dataselector-frontend
+    target: aqie-location-backend
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Resolve place names entered in the data selection journey."
+    endpoints:
+      - method: POST
+        path: /osnameplaces
+        data: "Place-name query in; matches out"
+    auth: "CDP internal network"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-dataselector-frontend
+        file: src/config/config.js
+        lines: "252"
+
+  - id: dataselector-frontend__monitoringstation-backend
+    source: aqie-dataselector-frontend
+    target: aqie-monitoringstation-backend
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Find monitoring stations relevant to the selected location."
+    endpoints:
+      - method: POST
+        path: /monitoringstation
+        data: "Location in; nearby stations with pollutants out"
+    auth: "CDP internal network"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-dataselector-frontend
+        file: src/config/config.js
+        lines: "258"
+
+  # --- Alerts and notifications --------------------------------------------
+  - id: alert-backend__ricardo
+    source: aqie-alert-back-end-service
+    target: ricardo-ukair
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: scheduled-batch
+    purpose: "Poll Ricardo for DAQI and air quality summary report alerts that trigger citizen notifications."
+    endpoints:
+      - method: POST
+        path: /api/login_check
+        data: "Credentials exchanged for bearer token"
+      - method: GET
+        path: /api/daqi_alerts
+        data: "DAQI threshold breach alerts by region"
+      - method: GET
+        path: /api/aqsr_alerts
+        data: "Air quality summary report alerts"
+      - method: GET
+        path: /api/site_meta_datas
+        data: "Site metadata for alert targeting"
+    auth: "Username/password login exchanged for bearer token"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-alert-back-end-service
+        file: src/config.js
+        lines: "162,168,174,223"
+
+  - id: alert-backend__front-end
+    source: aqie-alert-back-end-service
+    target: aqie-front-end
+    target_kind: aqie-service
+    protocol: HTTPS
+    direction: outbound-link
+    interaction: user-redirect
+    purpose: >-
+      Build unsubscribe and location deep links embedded in outgoing alert
+      messages. This is link construction, not a runtime API call.
+    endpoints:
+      - method: GET
+        path: /notify/unsubscribe-email-link
+        data: "Email identifier carried as a query parameter"
+    auth: "Tokenised link"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-alert-back-end-service
+        file: src/config.js
+        lines: "153,255"
+
+  - id: notify-service__alert-backend
+    source: aqie-notify-service
+    target: aqie-alert-back-end-service
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Process inbound SMS STOP replies by opting the citizen out of SMS alerts."
+    endpoints:
+      - method: DELETE
+        path: /opt-out-sms-alert
+        data: "{ phoneNumber } in; opt-out confirmation out"
+    auth: "CDP internal network"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-notify-service
+        file: src/subscribe/services/sms-reply.service.js
+        lines: "103-111"
+
+  - id: notify-service__govuk-notify
+    source: aqie-notify-service
+    target: govuk-notify
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: bidirectional
+    interaction: synchronous
+    purpose: "Send subscription, verification and alert messages, and retrieve inbound SMS replies."
+    data_exchanged: "Templated email and SMS payloads out; received SMS messages in"
+    auth: "API key"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-notify-service
+        file: src/subscribe/services/sms-reply.service.js
+
+  # --- Domestic combustion (Smoke Control) ---------------------------------
+  - id: dc-frontend__dc-backend
+    source: aqie-dc-frontend
+    target: aqie-dc-backend
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Retrieve exempt appliance and authorised fuel register records for the public search journey."
+    endpoints:
+      - method: GET
+        path: /get-all/{type}
+        data: "Register type in; full record set out"
+      - method: GET
+        path: /get/{type}/{id}
+        data: "Single register record"
+    auth: "CDP internal network; an x-api-key header is sent but not validated by the target"
+    confidence: confirmed
+    status: "BROKEN CONTRACT — see oq-006"
+    notes: >-
+      The frontend calls /get-all/{type} and /get/{type}/{id}, but neither path is
+      served by aqie-dc-backend on main. The frontend has not changed since April
+      while the backend API was reshaped. The public register journey is likely
+      non-functional. This edge previously listed /api/appliances/search,
+      /api/fuels/search and POST /applications; none of those are called by this
+      frontend.
+    evidence:
+      - repo: aqie-dc-frontend
+        file: src/server/common/api/api.js
+        lines: "13-14,71-73"
+
+  - id: defra-forms__dc-backend
+    source: defra-forms
+    target: aqie-dc-backend
+    target_kind: aqie-service
+    protocol: AWS SQS
+    direction: inbound
+    interaction: asynchronous
+    purpose: >-
+      Primary intake channel for smoke control applications. A background plugin
+      long-polls the queue every five minutes, maps opaque DEFRA Forms field ids
+      to domain fields, splits multi-appliance repeater submissions, and re-enters
+      its own HTTP routes so queue ingest and API writes share one validation path.
+    queue: "aqie-dc-queue"
+    data_exchanged: >-
+      meta.formSlug, meta.referenceNumber, meta.timestamp and data.main plus
+      repeater blocks. Routed on formSlug
+      'get-a-solid-fuel-certified-for-use-in-smoke-control-areas'.
+    auth: "IAM task role"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-dc-backend
+        file: src/sqs/client.js
+        lines: "33-41,45-57,119-122"
+      - repo: aqie-dc-backend
+        file: src/plugins/sqs-consumer.js
+        lines: "12-18"
+
+  - id: dc-admin-frontend__dc-backend
+    source: aqie-dc-admin-frontend
+    target: aqie-dc-backend
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Caseworker administration of appliances, fuels, applications and technical review."
+    endpoints:
+      - method: GET
+        path: /applications/search
+        data: "Filter criteria in; application case records out"
+      - method: PATCH
+        path: /appliances/{id}/technical-review
+        data: "Technical review decision payload"
+      - method: POST
+        path: /admin/import/initiate
+        data: "Bulk import request"
+    auth: "CDP internal network; user authenticated at the frontend via Entra ID"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-dc-admin-frontend
+        file: src/config/config.js
+        lines: "BACKEND_URL"
+
+  - id: dc-admin-frontend__azure-entra
+    source: aqie-dc-admin-frontend
+    target: azure-entra
+    target_kind: external
+    protocol: HTTPS/OIDC
+    direction: outbound
+    interaction: synchronous
+    purpose: "Authenticate DEFRA staff into the administration interface."
+    data_exchanged: "OIDC authorisation code flow; identity claims returned"
+    auth: "OpenID Connect via MSAL"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-dc-admin-frontend
+        file: src/config/azure-auth.js
+        lines: "7"
+
+  - id: dc-backend__cdp-uploader
+    source: aqie-dc-backend
+    target: cdp-uploader
+    target_kind: platform
+    protocol: HTTPS/REST
+    direction: bidirectional
+    interaction: asynchronous
+    purpose: "Upload supporting evidence files for virus scanning; receive scan outcome via callback."
+    endpoints:
+      - method: POST
+        path: /upload-and-scan/{uploadId}
+        data: "Upload initiation; file stored in S3"
+      - method: POST
+        path: /upload-callback
+        data: "Scan result callback received from the uploader"
+    auth: "Platform-internal network"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-dc-backend
+        file: src/config.js
+        lines: "144"
+
+  # --- Pollutant Release and Transfer Register -----------------------------
+  - id: prtr-frontend__prtr-backend
+    source: aqie-prtr-frontend
+    target: aqie-prtr-backend
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Search and display industrial facility pollutant release records."
+    endpoints:
+      - method: GET
+        path: /facilities/search
+        data: "Search criteria in; matching facilities out"
+      - method: GET
+        path: /facilities/nearby
+        data: "Coordinates in; nearby facilities out"
+      - method: GET
+        path: /facilities/{id}/details
+        data: "Full facility detail record"
+      - method: GET
+        path: /facilities/{id}/competent-authority
+        data: "Regulating authority for the facility"
+      - method: GET
+        path: "/facilities/{id}/record/{year?}"
+        data: "Facility release record; year optional, defaults to latest"
+      - method: GET
+        path: /facilities/{id}/record/{year}/lines/{lineId}
+        data: "Individual release or transfer line detail"
+      - method: GET
+        path: /locations/search
+        data: "Location search backing the facility finder"
+      - method: GET
+        path: /reports
+        data: "Available annual dataset reports"
+      - method: GET
+        path: /reports/get-download-link/{year}
+        data: "Year in; pre-signed S3 download link out"
+    auth: "CDP internal network"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-prtr-frontend
+        file: src/server/common/api/
+      - repo: aqie-prtr-backend
+        file: src/routes/
+
+  - id: prtr-backend__location-backend
+    source: aqie-prtr-backend
+    target: aqie-location-backend
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Resolve place names for facility location search."
+    endpoints:
+      - method: POST
+        path: /osnameplaces
+        data: "Place-name query in; matches out"
+    auth: "CDP internal network"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-prtr-backend
+        file: src/config.js
+        lines: "132"
+
+  # --- Maps and visualisation ----------------------------------------------
+  - id: maps-frontend__back-end
+    source: aqie-maps-frontend
+    target: aqie-back-end
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Supply station and AURN data to the interactive map layer."
+    endpoints:
+      - method: GET
+        path: /monitoringStations
+        data: "Full station list for map plotting"
+      - method: GET
+        path: /monitoringStationInfo
+        data: "Detail for a selected station"
+      - method: GET
+        path: /aurnData
+        data: "AURN network dataset"
+      - method: GET
+        path: /forecasts
+        data: "Forecast fallback, used only when AQIE_FORECAST_API_URL is unset"
+    auth: "CDP internal network"
+    confidence: confirmed
+    notes: >-
+      Does NOT call /measurements. An earlier revision of this catalogue listed
+      it; a full-text search of src/ found no call site.
+    evidence:
+      - repo: aqie-maps-frontend
+        file: src/server/common/helpers/aqie-back-end.js
+        lines: "33-47"
+      - repo: aqie-maps-frontend
+        file: src/server/common/helpers/aqie-forecast-api.js
+        lines: "6-12"
+
+  - id: maps-frontend__forecast-api
+    source: aqie-maps-frontend
+    target: aqie-forecast-api
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Overlay forecast data on the map."
+    endpoints:
+      - method: GET
+        path: /forecast
+        data: "Forecast DAQI values by day and region"
+    auth: "CDP internal network"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-maps-frontend
+        file: src/config/config.js
+        lines: "209-215"
+
+  - id: demo-visualisations__back-end
+    source: aqie-demo-data-visualisations
+    target: aqie-back-end
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: >-
+      Server-side rendering of demonstration charts. Stations are sourced from
+      /measurements rather than /monitoringStations because only that collection
+      keys stations by the localSiteID used to resolve feature-of-interest ids.
+    endpoints:
+      - method: GET
+        path: /measurements
+        data: "Station list keyed by localSiteID with per-pollutant data"
+    auth: "None (CDP internal network)"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-demo-data-visualisations
+        file: app/lib/aqie-api.js
+        lines: "1-40"
+
+  # --- Prototype and proof-of-concept edges --------------------------------
+  - id: docanalysisawspoc-frontend__docanalysispoc-backend
+    source: aqie-docanalysisawspoc-frontend
+    target: aqie-docanalysispoc-backend
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Prototype document analysis journey."
+    auth: "CDP internal network"
+    confidence: confirmed
+    lifecycle: "Prototype — both ends inactive"
+    evidence:
+      - repo: aqie-docanalysisawspoc-frontend
+        file: src/config/config.js
+
+  - id: docanalysispoc-frontend__docanalysispoc-backend
+    source: aqie-docanalysispoc-frontend
+    target: aqie-docanalysispoc-backend
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Earlier prototype document analysis frontend."
+    auth: "CDP internal network"
+    confidence: confirmed
+    lifecycle: "Prototype — superseded by aqie-docanalysisawspoc-frontend"
+    evidence:
+      - repo: aqie-docanalysispoc-frontend
+        file: src/config/config.js
+
+  - id: docanalysispoc-backend__model-providers
+    source: aqie-docanalysispoc-backend
+    target: model-providers
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: >-
+      Summarise and appraise DEFRA business case documents using a large language
+      model. Two providers sit behind a USE_DIRECT_API flag: Azure OpenAI (GPT-4
+      family) and AWS Bedrock (Claude 3 Sonnet).
+    data_exchanged: "Extracted document text out; generated appraisal narrative back"
+    auth: "API key or IAM"
+    confidence: confirmed
+    lifecycle: "Prototype — inactive. Information governance position unconfirmed (oq-011)."
+    evidence:
+      - repo: aqie-docanalysispoc-backend
+        file: src/config/config.js
+
+  # --- Citizen alert journey (front end to alert and notify services) ------
+  - id: front-end__alert-backend
+    source: aqie-front-end
+    target: aqie-alert-back-end-service
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: >-
+      Create and remove citizen alert subscriptions, and retrieve breach and DAQI
+      alert content for the alerts journey. This is the runtime direction; the
+      separate alert-backend__front-end edge covers link construction only.
+    endpoints:
+      - method: POST
+        path: /setup-alert
+        data: "Verified contact, location, coordinates, channel and language"
+      - method: DELETE
+        path: /opt-out-email-alert
+        data: "Email identifier; removes the subscription"
+      - method: GET
+        path: /aqsr-alert
+        data: "Air quality summary report breaches by day or date range"
+      - method: GET
+        path: /daqi-alert
+        data: "DAQI alert content for coordinates on a given day"
+    auth: "CDP internal network; CDP_X_API_KEY when routed via the protected gateway"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-front-end
+        file: src/config/schema-extra.js
+        lines: "15-66,189-200"
+      - repo: aqie-front-end
+        file: src/server/common/services/notify-backend.js
+        lines: "178-215,300"
+
+  - id: front-end__notify-service
+    source: aqie-front-end
+    target: aqie-notify-service
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Verify a citizen's email address or mobile number before an alert subscription is created."
+    endpoints:
+      - method: POST
+        path: /subscribe/generate-otp
+        data: "Mobile number in; one-time code dispatched"
+      - method: POST
+        path: /subscribe/validate-otp
+        data: "Code in; verification result and pending subscription out"
+      - method: POST
+        path: /subscribe/generate-link
+        data: "Email address in; magic link dispatched"
+      - method: GET
+        path: /subscribe/validate-link/{uuid}
+        data: "Link token in; pending subscription payload out"
+    auth: "CDP internal network; CDP_X_API_KEY when routed via the protected gateway"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-front-end
+        file: src/config/schema-extra.js
+        lines: "11-49"
+      - repo: aqie-front-end
+        file: src/server/common/services/notify-backend.js
+        lines: "14,40-70"
+
+  - id: alert-backend__notify-service
+    source: aqie-alert-back-end-service
+    target: aqie-notify-service
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: >-
+      Dispatch every citizen message through the notify service, which is the sole
+      holder of the GOV.UK Notify API key.
+    endpoints:
+      - method: POST
+        path: /send-notification
+        data: "Recipient, Notify template id, personalisation and alertId out; notification id back"
+    auth: "CDP internal network"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-alert-back-end-service
+        file: src/users/utils/notifyServiceClient.js
+
+  - id: alert-backend__forecast-api
+    source: aqie-alert-back-end-service
+    target: aqie-forecast-api
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: scheduled-batch
+    purpose: "Retrieve Met Office DAQI forecast values to detect forecast-based alert conditions."
+    endpoints:
+      - method: GET
+        path: /forecast
+        data: "Forecast DAQI values with station coordinates"
+    auth: "CDP internal network"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-alert-back-end-service
+        file: src/users/utils/forecastApiClient.js
+
+  - id: notify-service__front-end
+    source: aqie-notify-service
+    target: aqie-front-end
+    target_kind: aqie-service
+    protocol: HTTPS
+    direction: outbound-link
+    interaction: user-redirect
+    purpose: "Build the email verification deep link embedded in outgoing verification messages."
+    endpoints:
+      - method: GET
+        path: /notify/register/email-confirm-link
+        data: "Verification token carried as a query parameter"
+    auth: "Tokenised link"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-notify-service
+        file: src/subscribe/services/email-verification.service.js
+
+  # --- Front end supporting integrations ------------------------------------
+  - id: front-end__azure-entra
+    source: aqie-front-end
+    target: azure-entra
+    target_kind: external
+    protocol: HTTPS/OAuth2
+    direction: outbound
+    interaction: synchronous
+    purpose: "Obtain a client-credentials token used to call the Northern Ireland OS Places lookup."
+    endpoints:
+      - method: POST
+        path: /{tenant}/oauth2/v2.0/token
+        data: "Client credentials in; bearer token out"
+    auth: "OAuth2 client credentials"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-front-end
+        file: src/server/common/helpers/fetch-oauth-token.js
+        lines: "43-45"
+
+  - id: front-end__os-places-ni
+    source: aqie-front-end
+    target: os-places-ni
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Resolve Northern Ireland postcodes, which are not covered by the GB gazetteer path."
+    data_exchanged: "Postcode in; address and coordinates out"
+    auth: "OAuth2 bearer token from Entra ID"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-front-end
+        file: src/config/schema-extra.js
+        lines: "260-264"
+
+  - id: front-end__postcodes-io
+    source: aqie-front-end
+    target: postcodes-io
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Postcode search, used as the Northern Ireland fallback path."
+    endpoints:
+      - method: GET
+        path: /postcodes
+        data: "Postcode query in; matches out"
+    auth: "None"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-front-end
+        file: src/config/schema-extra.js
+        lines: "240-245"
+
+  - id: front-end__google-tag-manager
+    source: aqie-front-end
+    target: google-tag-manager
+    target_kind: external
+    protocol: HTTPS
+    direction: outbound
+    interaction: browser-side
+    purpose: "Usage analytics, loaded only after the citizen accepts analytics cookies."
+    data_exchanged: "Page view and interaction events from the browser"
+    auth: "Measurement ID"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-front-end
+        file: src/client/assets/javascripts/components/load-analytics.mjs
+
+  # --- Maps ----------------------------------------------------------------
+  - id: maps-prototype__back-end
+    source: aqie-maps-prototype
+    target: aqie-back-end
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Prototype map data source."
+    endpoints:
+      - method: GET
+        path: /monitoringStations
+        data: "Station list for plotting"
+      - method: GET
+        path: /monitoringStationInfo
+        data: "Selected station detail"
+      - method: GET
+        path: /health
+        data: "Upstream availability probe"
+    auth: "CDP internal network"
+    confidence: confirmed
+    lifecycle: "Prototype — superseded by aqie-maps-frontend"
+    evidence:
+      - repo: aqie-maps-prototype
+        file: app/api/aqieBackEnd.js
+        lines: "11,24-26,38,41-43"
+
+  - id: maps-prototype__forecast-api
+    source: aqie-maps-prototype
+    target: aqie-forecast-api
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Prototype forecast overlay."
+    endpoints:
+      - method: GET
+        path: /forecast
+        data: "Forecast DAQI values"
+    auth: "CDP internal network"
+    confidence: confirmed
+    lifecycle: "Prototype — superseded by aqie-maps-frontend"
+    evidence:
+      - repo: aqie-maps-prototype
+        file: app/api/aqieBackEnd.js
+        lines: "12,34-36"
+
+  - id: maps-frontend__openfreemap
+    source: aqie-maps-frontend
+    target: openfreemap
+    target_kind: external
+    protocol: HTTPS
+    direction: outbound
+    interaction: browser-side
+    purpose: "Vector base map tiles and styles fetched directly by the citizen's browser."
+    data_exchanged: "Tile requests out; map tiles back. No AQIE data is sent."
+    auth: "None"
+    confidence: confirmed
+    open_question: "Confirm OpenFreeMap is acceptable as a production dependency (oq-008)."
+    evidence:
+      - repo: aqie-maps-frontend
+        file: src/client/javascripts/map.js
+        lines: "10"
+      - repo: aqie-maps-frontend
+        file: src/server/plugins/content-security-policy.js
+        lines: "14-34"
+
+  - id: maps-prototype__openfreemap
+    source: aqie-maps-prototype
+    target: openfreemap
+    target_kind: external
+    protocol: HTTPS
+    direction: outbound
+    interaction: browser-side
+    purpose: "Vector base map tiles for the prototype map."
+    auth: "None"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-maps-prototype
+        file: app/assets/javascripts/map.js
+        lines: "10"
+
+  # --- Analytics and exploration -------------------------------------------
+  - id: demo-visualisations__defra-sos
+    source: aqie-demo-data-visualisations
+    target: defra-sos
+    target_kind: external
+    protocol: HTTPS/OGC SOS
+    direction: outbound
+    interaction: synchronous
+    purpose: >-
+      Retrieve historic hourly observation series for demonstration charts,
+      because aqie-back-end exposes no history endpoint.
+    endpoints:
+      - method: GET
+        path: /service?service=AQD&version=1.0.0&request=GetObservation
+        data: "Feature-of-interest and temporal range in; SWE-encoded hourly series out"
+    auth: "None"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-demo-data-visualisations
+        file: app/lib/sos-history.js
+        lines: "18-21"
+
+  - id: demo-visualisations__postcodes-io
+    source: aqie-demo-data-visualisations
+    target: postcodes-io
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Place and postcode search for the demonstration UI."
+    endpoints:
+      - method: GET
+        path: /postcodes/{postcode}
+        data: "Postcode lookup"
+      - method: GET
+        path: /outcodes/{outcode}
+        data: "Outcode lookup"
+      - method: GET
+        path: /places
+        data: "Place-name search"
+    auth: "None"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-demo-data-visualisations
+        file: app/lib/search.js
+
+  - id: laqm-data-explorer__laqm-portal
+    source: aqie-laqm-data-explorer
+    target: laqm-portal
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Explore local authority air quality management data held in the LAQM Portal."
+    endpoints:
+      - method: GET
+        path: /xapi/getLocalAuthorities/json
+        data: "Local authority reference list"
+      - method: GET
+        path: /xapi/getRegions/json
+        data: "Region reference list"
+      - method: GET
+        path: /xapi/getSingleLAData/{laId}/json
+        data: "Single local authority detail"
+      - method: GET
+        path: /xapi/getSingleDTDataByYear/{year}/{laId}/{page}/{perPage}/json
+        data: "Diffusion tube data by year, paginated"
+      - method: GET
+        path: /xapi/getADESDataByYear/{year}/{laId}/{page}/{perPage}/json
+        data: "Air quality management area data by year, paginated"
+      - method: GET
+        path: /xapi/getTop3AQAPMeasuresByYear/{laId}/{year}/json
+        data: "Top three action plan measures"
+    auth: "X-API-Key and X-API-PartnerId headers"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-laqm-data-explorer
+        file: app/lib/laqm-api.js
+        lines: "23,163-167,239-279"
+
+  - id: dataselector-frontend__laqm-portal
+    source: aqie-dataselector-frontend
+    target: laqm-portal
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Populate the local authority picker in the custom dataset journey."
+    endpoints:
+      - method: GET
+        path: /xapi/getLocalAuthorities/json
+        data: "UK local authority list"
+    auth: "X-API-Key and X-API-PartnerId headers"
+    caching: "12-hour in-process cache with stale-value fallback on timeout or bad payload"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-dataselector-frontend
+        file: src/server/location_aurn/controller.js
+        lines: "596,631-650"
+
+  # --- Historic data backend upstreams -------------------------------------
+  - id: historicaldata-backend__ukair-atom
+    source: aqie-historicaldata-backend
+    target: ukair-atom
+    target_kind: external
+    protocol: HTTPS
+    direction: outbound
+    interaction: synchronous
+    purpose: >-
+      Fetch the actual historic measurement series on demand when building an extract.
+      This answers oq-002: the service does not hold historic measurements itself and is
+      not fed from aqie-back-end. It re-fetches from UK-AIR for every extract.
+    endpoints:
+      - method: GET
+        path: "/data/atom-dls/observations/auto/GB_FixedObservations_{year}_{siteID}.xml"
+        data: "INSPIRE/OM-SWE observation XML for automatic monitoring sites"
+      - method: GET
+        path: "/data/atom-dls/observations/non-auto/..."
+        data: "INSPIRE/OM-SWE observation XML for non-automatic sites"
+    auth: "None (public endpoint)"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-historicaldata-backend
+        file: AqieHistoricaldataBackend/Atomfeed/
+
+  - id: historicaldata-backend__ricardo
+    source: aqie-historicaldata-backend
+    target: ricardo-ukair
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Resolve which AURN sites are relevant to a data selection."
+    endpoints:
+      - method: POST
+        path: /api/login_check
+        data: "Credentials exchanged for bearer token"
+      - method: GET
+        path: "/api/site_meta_datas?with-closed=true&with-pollutants=1"
+        data: "AURN site metadata and pollutant coverage"
+    auth: "Bearer token; credential variables RICARDO_API_KEY and RICARDO_API_VALUE"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-historicaldata-backend
+        file: AqieHistoricaldataBackend/Atomfeed/
+
+  - id: historicaldata-backend__laqm-portal
+    source: aqie-historicaldata-backend
+    target: laqm-portal
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Resolve local authority areas and diffusion tube data for non-AURN selections."
+    endpoints:
+      - method: GET
+        path: /xapi/getLocalAuthorities/json
+        data: "Local authority reference list"
+      - method: GET
+        path: /xapi/getSingleDTDataByYear/{year}/{laId}/{page}/{perPage}/json
+        data: "Diffusion tube data with OS grid references"
+    auth: "X-API-Key and X-API-PartnerId headers"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-historicaldata-backend
+        file: AqieHistoricaldataBackend/Atomfeed/
+
+  - id: historicaldata-backend__notify-service
+    source: aqie-historicaldata-backend
+    target: aqie-notify-service
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: asynchronous
+    purpose: >-
+      Email the citizen a link to a completed extract. A background service picks up
+      pending email jobs on an interval.
+    endpoints:
+      - method: POST
+        path: /send-notification
+        data: "Recipient email address, Notify template identifier, and the extract download link as personalisation"
+    auth: "CDP internal network"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-historicaldata-backend
+        file: AqieHistoricaldataBackend/
+        lines: "NOTIFY_BASEADDRESS + NOTIFY_URL configuration"
+
+  - id: historicaldata-backend__s3
+    source: aqie-historicaldata-backend
+    target: AWS S3
+    target_kind: datastore
+    protocol: AWS SDK
+    direction: outbound
+    interaction: synchronous
+    purpose: >-
+      Read seeded reference spreadsheets on startup, upload generated CSV and ZIP
+      extracts, and issue pre-signed download URLs valid for seven days.
+    data_exchanged: "Reference spreadsheets in; extract artefacts out; pre-signed URLs issued"
+    auth: "IAM role via the AWS SDK"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-historicaldata-backend
+        file: AqieHistoricaldataBackend/
+
+  # --- Object storage edges -------------------------------------------------
+  - id: prtr-backend__s3
+    source: aqie-prtr-backend
+    target: AWS S3
+    target_kind: datastore
+    protocol: AWS SDK
+    direction: outbound
+    interaction: synchronous
+    purpose: >-
+      Locate annual PRTR dataset XML files and issue pre-signed download URLs.
+      Uses ListObjectsV2, HeadObject and GetObject pre-signing.
+    data_exchanged: "Object listings and metadata in; time-limited download URL out"
+    auth: "ECS task IAM role"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-prtr-backend
+        file: src/services/s3-service.js
+
+  - id: prtr-frontend__s3
+    source: aqie-prtr-frontend
+    target: AWS S3
+    target_kind: datastore
+    protocol: HTTPS
+    direction: outbound
+    interaction: synchronous
+    purpose: >-
+      Stream an annual dataset file to the citizen by following the pre-signed URL
+      supplied by aqie-prtr-backend.
+    data_exchanged: "Annual PRTR dataset XML"
+    auth: "Pre-signed URL"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-prtr-frontend
+        file: src/server/routes/download/download-proxy.js
+        lines: "79-99"
+
+  - id: dc-backend__s3
+    source: aqie-dc-backend
+    target: AWS S3
+    target_kind: datastore
+    protocol: AWS SDK
+    direction: outbound
+    interaction: synchronous
+    purpose: "Read uploaded evidence and bulk import files after the uploader reports a clean scan."
+    data_exchanged: "Bucket and key arrive in the uploader callback; object contents read back"
+    auth: "ECS task IAM role"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-dc-backend
+        file: src/common/helpers/s3-download.js
+      - repo: aqie-dc-backend
+        file: src/routes/upload-callback.js
+
+# ---------------------------------------------------------------------------
+# Datastores owned by services (not edges between services)
+# ---------------------------------------------------------------------------
+service_datastores:
+  - service: aqie-back-end
+    stores: ["MongoDB"]
+    notes: "Ingested Ricardo and forecast data; distributed locking via mongo-locks."
+  - service: aqie-forecast-api
+    stores: ["MongoDB"]
+    notes: "Parsed Met Office forecast documents."
+  - service: aqie-location-backend
+    stores: ["MongoDB"]
+  - service: aqie-monitoringstation-backend
+    stores: ["MongoDB"]
+  - service: aqie-alert-back-end-service
+    stores: ["MongoDB", "Redis"]
+    notes: "Subscriber records and alert dispatch state."
+  - service: aqie-notify-service
+    stores: ["MongoDB", "Redis"]
+    notes: "Subscription lifecycle, OTP and link validation state."
+  - service: aqie-dc-backend
+    stores: ["MongoDB", "Redis", "AWS S3", "AWS SQS"]
+    notes: "Appliance/fuel registers, applications, uploaded evidence, async message handling."
+  - service: aqie-prtr-backend
+    stores: ["MongoDB", "AWS S3"]
+    notes: "Facility records; generated report files in S3."
+  - service: aqie-historicaldata-backend
+    stores: ["MongoDB", "AWS S3", "Redis"]
+    notes: "Historic measurement extracts staged to S3 and delivered via pre-signed URLs."
+  - service: aqie-front-end
+    stores: ["Redis"]
+    notes: "Session and response caching only (catbox-redis, yar)."
+  - service: aqie-dataselector-frontend
+    stores: ["Redis"]
+    notes: >-
+      Session state only. AWS SDK packages are declared in package.json but not
+      imported; the service only follows pre-signed URLs handed to it.
+
+# ---------------------------------------------------------------------------
+# Edges that were asserted but disproved. Recorded so they are not re-added.
+# ---------------------------------------------------------------------------
+refuted_edges:
+  - claim: "aqie-dataselector-frontend -> cdp-uploader"
+    verdict: refuted
+    reason: >-
+      CDP_UPLOADER_URL and AWS_S3_BUCKET_NAME are defined in config but read
+      nowhere. There is no upload route, no multipart handler and no file input
+      in any template. The config block is dead, copied from the document
+      analysis proof of concept along with unused langchain, pdf2json, xlsx and
+      aws-sdk dependencies.
+    checked_at_utc: "2026-09-15T00:00:00Z"
+
+  - claim: "aqie-maps-frontend -> aqie-back-end GET /measurements"
+    verdict: refuted
+    reason: "Full-text search of src/ (excluding tests) returns no call site."
+    checked_at_utc: "2026-09-15T00:00:00Z"
+
+  - claim: "aqie-dc-backend -> GOV.UK Notify or aqie-notify-service"
+    verdict: refuted
+    reason: "No Notify dependency, no NOTIFY_* variable and no outbound URL in the repository."
+    checked_at_utc: "2026-09-15T00:00:00Z"
+
+  - claim: "aqie-dc-backend as an SQS producer"
+    verdict: refuted
+    reason: "The service only receives and deletes messages. No SendMessageCommand exists."
+    checked_at_utc: "2026-09-15T00:00:00Z"
+
+  - claim: "aqie-kpi-metrics-dashboard -> any AQIE data source"
+    verdict: refuted
+    reason: >-
+      The metrics controller returns literal empty objects. All calculation is
+      client-side over a user-uploaded spreadsheet, persisted to localStorage.
+      No API client and no database.
+    checked_at_utc: "2026-09-15T00:00:00Z"
+
+# ---------------------------------------------------------------------------
+# Known gaps requiring owner confirmation
+# ---------------------------------------------------------------------------
+open_questions:
+  - id: oq-001
+    question: "Does aqie-back-end still send notifications directly, or is this fully delegated to aqie-notify-service?"
+    affects: ["back-end__govuk-notify"]
+  - id: oq-002
+    question: "Which pipeline populates aqie-historicaldata-backend with source measurement data?"
+    status: >-
+      Answered — none. The service holds no historic measurements. It re-fetches
+      observation XML from the public DEFRA UK-AIR INSPIRE Atom download service on
+      demand for each extract, resolving site lists from Ricardo (AURN) or from a
+      station master list in MongoDB (non-AURN). It stores only job state and
+      reference data.
+    affects: ["historicaldata-backend__ukair-atom"]
+  - id: oq-003
+    question: "Should aqie-kpi-metrics-dashboard be completed with a real data source, or archived?"
+    status: "Answered — it has no data source and is a standalone browser-side prototype."
+    affects: ["aqie-kpi-metrics-dashboard"]
+  - id: oq-004
+    question: "What does aqie-laqm-data-explorer's API_BASE_URL point at?"
+    status: "Answered — the external LAQM Portal API at www.laqmportal.co.uk."
+    affects: ["laqm-data-explorer__laqm-portal"]
+  - id: oq-005
+    question: "Which service owns subscriber state, aqie-alert-back-end-service or aqie-notify-service?"
+    status: >-
+      Answered — the alert backend owns subscriber state (USERS collection); the
+      notify service owns only the messaging edge and is the sole holder of the
+      GOV.UK Notify key. Unsubscribe is asymmetric: SMS opt-out routes through
+      notify, email opt-out routes through the front end. Confirm that is intended.
+    affects: ["notify-service__alert-backend", "alert-backend__notify-service"]
+  - id: oq-006
+    question: >-
+      Is the public smoke control register currently broken? aqie-dc-frontend calls
+      /get-all/{type} and /get/{type}/{id}, neither of which aqie-dc-backend serves
+      on main.
+    severity: high
+    affects: ["dc-frontend__dc-backend"]
+  - id: oq-007
+    question: "Who operates the LAQM Portal API, and what is the data-sharing basis for the AQIE partner credentials?"
+    affects: ["laqm-data-explorer__laqm-portal", "dataselector-frontend__laqm-portal"]
+  - id: oq-008
+    question: "Is OpenFreeMap acceptable as a production dependency for citizen-facing maps?"
+    affects: ["maps-frontend__openfreemap"]
+  - id: oq-009
+    question: >-
+      Is GET or POST correct for /osnameplaces and /monitoringstation? Service
+      config and performance test plans disagree.
+    affects: ["monitoringstation-backend__location-backend", "dataselector-frontend__location-backend"]
+  - id: oq-010
+    question: >-
+      Who produces and uploads the annual uk_prtr_dataset_<year>.xml files to S3,
+      and who runs the manual TSV ingest that populates the PRTR facility data?
+    affects: ["prtr-backend__s3"]
+  - id: oq-011
+    question: >-
+      Was an information governance assessment or DPIA completed for sending DEFRA
+      business case text to Azure OpenAI and AWS Bedrock in the document analysis
+      proof of concept?
+    severity: high
+    affects: ["docanalysispoc-backend__model-providers"]
+  - id: oq-012
+    question: >-
+      Which Ricardo host is authoritative for production? aqie-back-end defaults to
+      uk-air-api.staging.rcdo.co.uk while aqie-alert-back-end-service defaults to
+      api-ukair.defra.gov.uk.
+    severity: high
+    affects: ["back-end__ricardo", "alert-backend__ricardo"]
+  - id: oq-013
+    question: >-
+      Does aqie-front-end have a sixth outbound edge via SUBSCRIPTION_API_BASE_URL?
+      It has no default and the feature is off by default.
+    affects: ["aqie-front-end"]
+  - id: oq-014
+    question: >-
+      Does aqie-monitoringstation-backend call /monitoringStationInfo or /measurements
+      in each environment? The endpoint is supplied by the overridable RICARDO_API_URL
+      variable and the alternative is present but commented out in source.
+    affects: ["monitoringstation-backend__back-end"]
+  - id: oq-015
+    question: >-
+      aqie-front-end is configured with a getSubscriptionsPath of /api/subscriptions
+      against the alert backend, but no such route exists there. Is this dead config or
+      a missing endpoint?
+    affects: ["front-end__alert-backend"]

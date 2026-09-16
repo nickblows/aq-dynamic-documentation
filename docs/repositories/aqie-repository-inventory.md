@@ -1,38 +1,51 @@
 # DEFRA AQIE Repository Inventory
 
-Source query: `https://github.com/orgs/DEFRA/repositories?language=&q=aqie&sort=&type=all`
+Discovery query: `org:DEFRA aqie in:name` via the GitHub search API.
 
-_Note: `created_at_utc` could not be reliably captured without SSO-enabled API access and remains pending._
+Generated at: `2026-09-15T13:13:26Z`
 
-| Repository | Domain | Type | Last Modified (UTC) | Active Status | Connected Services |
-|---|---|---|---|---|---|
-| [aqie-alert-back-end-service](https://github.com/DEFRA/aqie-alert-back-end-service) | Shared | Auxilary Backend Service | 2026-08-10T09:27:32.510Z | Active | none-confirmed |
-| [aqie-back-end](https://github.com/DEFRA/aqie-back-end) | Shared | Core Backend Service | 2026-08-25T15:30:38.854Z | Active | aqie-front-end |
-| [aqie-data-privatebeta-perftest](https://github.com/DEFRA/aqie-data-privatebeta-perftest) | Shared | Quality/Test Service | 2026-02-05T09:15:51.665Z | Inactive | aqie-privatebeta-api-perftest, aqie-privatebeta-perftest, aqie-privatebeta-test |
-| [aqie-dataselector-frontend](https://github.com/DEFRA/aqie-dataselector-frontend) | Citizen | Auxilary Frontend | 2026-09-11T09:54:07.297Z | Active | none-confirmed |
-| [aqie-dc-admin-frontend](https://github.com/DEFRA/aqie-dc-admin-frontend) | Citizen | Auxilary Frontend | 2026-09-14T13:09:25.512Z | Active | aqie-dc-backend, aqie-dc-frontend, aqie-dc-poc-backend, aqie-dc-poc-frontend |
-| [aqie-dc-backend](https://github.com/DEFRA/aqie-dc-backend) | Data | Auxilary Backend Service | 2026-09-14T14:18:32.112Z | Active | aqie-dc-admin-frontend, aqie-dc-frontend, aqie-dc-poc-backend, aqie-dc-poc-frontend |
-| [aqie-dc-frontend](https://github.com/DEFRA/aqie-dc-frontend) | Citizen | Auxilary Frontend | 2026-07-02T15:58:33.821Z | Active | aqie-dc-admin-frontend, aqie-dc-backend, aqie-dc-poc-backend, aqie-dc-poc-frontend |
-| [aqie-dc-poc-backend](https://github.com/DEFRA/aqie-dc-poc-backend) | Data | Prototype Service (including PoC) | 2026-05-21T12:50:50.934Z | Monitoring | aqie-dc-admin-frontend, aqie-dc-backend, aqie-dc-frontend, aqie-dc-poc-frontend |
-| [aqie-dc-poc-frontend](https://github.com/DEFRA/aqie-dc-poc-frontend) | Citizen | Prototype Service (including PoC) | 2026-05-20T14:18:18.951Z | Monitoring | aqie-dc-admin-frontend, aqie-dc-backend, aqie-dc-frontend, aqie-dc-poc-backend |
-| [aqie-demo-data-visualisations](https://github.com/DEFRA/aqie-demo-data-visualisations) | Shared | Demo Service | 2026-09-09T10:12:35.559Z | Active | none-confirmed |
-| [aqie-docanalysisawspoc-frontend](https://github.com/DEFRA/aqie-docanalysisawspoc-frontend) | Citizen | Prototype Service (including PoC) | 2025-12-17T16:13:46.229Z | Inactive | aqie-docanalysispoc-backend |
-| [aqie-docanalysispoc-backend](https://github.com/DEFRA/aqie-docanalysispoc-backend) | Data | Prototype Service (including PoC) | 2025-10-29T16:38:02.459Z | Inactive | aqie-docanalysisawspoc-frontend |
-| [aqie-forecast-api](https://github.com/DEFRA/aqie-forecast-api) | Data | Auxilary Backend Service | 2026-08-06T12:14:30.858Z | Active | none-confirmed |
-| [aqie-front-end](https://github.com/DEFRA/aqie-front-end) | Citizen | Core Frontend Service | 2026-09-02T16:32:09.288Z | Active | aqie-back-end |
-| [aqie-historicaldata-backend](https://github.com/DEFRA/aqie-historicaldata-backend) | Data | Auxilary Backend Service | 2026-09-09T12:26:29.733Z | Active | none-confirmed |
-| [aqie-kpi-metrics-dashboard](https://github.com/DEFRA/aqie-kpi-metrics-dashboard) | Citizen | Data/Analytics Support Service | 2026-03-11T11:30:17.163Z | Inactive | none-confirmed |
-| [aqie-laqm-data-explorer](https://github.com/DEFRA/aqie-laqm-data-explorer) | Citizen | Data/Analytics Support Service | 2026-07-08T14:17:40.947Z | Active | none-confirmed |
-| [aqie-location-backend](https://github.com/DEFRA/aqie-location-backend) | Data | Auxilary Backend Service | 2026-05-19T15:33:04.220Z | Monitoring | none-confirmed |
-| [aqie-maps-frontend](https://github.com/DEFRA/aqie-maps-frontend) | Citizen | Auxilary Frontend | 2026-08-26T16:03:37.757Z | Active | aqie-maps-prototype |
-| [aqie-maps-prototype](https://github.com/DEFRA/aqie-maps-prototype) | Citizen | Prototype Service (including PoC) | 2026-06-05T15:34:10.158Z | Monitoring | aqie-maps-frontend |
-| [aqie-monitoringstation-backend](https://github.com/DEFRA/aqie-monitoringstation-backend) | Data | Auxilary Backend Service | 2026-03-18T12:22:54.216Z | Monitoring | none-confirmed |
-| [aqie-notify-service](https://github.com/DEFRA/aqie-notify-service) | Data | Auxilary Backend Service | 2026-05-28T09:00:34.692Z | Monitoring | none-confirmed |
-| [aqie-privatebeta-api-perftest](https://github.com/DEFRA/aqie-privatebeta-api-perftest) | Data | Quality/Test Service | 2026-07-23T22:15:54.586Z | Active | aqie-data-privatebeta-perftest, aqie-privatebeta-perftest, aqie-privatebeta-test |
-| [aqie-privatebeta-perftest](https://github.com/DEFRA/aqie-privatebeta-perftest) | Shared | Quality/Test Service | 2026-08-19T07:55:40.781Z | Active | aqie-data-privatebeta-perftest, aqie-privatebeta-api-perftest, aqie-privatebeta-test |
-| [aqie-privatebeta-test](https://github.com/DEFRA/aqie-privatebeta-test) | Shared | Quality/Test Service | 2026-08-06T12:22:45.137Z | Active | aqie-data-privatebeta-perftest, aqie-privatebeta-api-perftest, aqie-privatebeta-perftest |
-| [aqie-prtr-backend](https://github.com/DEFRA/aqie-prtr-backend) | Data | Auxilary Backend Service | 2026-07-23T14:42:38.834Z | Active | aqie-prtr-frontend, aqie-prtr-journey-tests, aqie-prtr-perftest |
-| [aqie-prtr-frontend](https://github.com/DEFRA/aqie-prtr-frontend) | Citizen | Auxilary Frontend | 2026-07-23T14:42:19.757Z | Active | aqie-prtr-backend, aqie-prtr-journey-tests, aqie-prtr-perftest |
-| [aqie-prtr-journey-tests](https://github.com/DEFRA/aqie-prtr-journey-tests) | Shared | Quality/Test Service | 2026-08-21T16:13:06.892Z | Active | aqie-prtr-backend, aqie-prtr-frontend, aqie-prtr-perftest |
-| [aqie-prtr-perftest](https://github.com/DEFRA/aqie-prtr-perftest) | Shared | Quality/Test Service | 2026-06-19T12:09:53.132Z | Active | aqie-prtr-backend, aqie-prtr-frontend, aqie-prtr-journey-tests |
-| [aqie-publicbeta-test](https://github.com/DEFRA/aqie-publicbeta-test) | Shared | Quality/Test Service | 2025-11-28T14:29:48.379Z | Inactive | none-confirmed |
+Connected services are taken from evidence-backed edges in
+[`/docs/integration-catalog.yaml`](../integration-catalog.yaml). An empty cell means no
+integration evidence was found on the default branch, not that the service is isolated.
+
+| Repository | Domain | Type | Language | Created (UTC) | Last Main Commit (UTC) | Status | Connected Services |
+|---|---|---|---|---|---|---|---|
+| [AQIE-Citizen-Alpha](https://github.com/DEFRA/AQIE-Citizen-Alpha) | Citizen | Prototype Service (including PoC) | CSS | 2023-07-21 | 2023-07-31T15:25:36 | Archived | — |
+| [aqie-alert-back-end-service](https://github.com/DEFRA/aqie-alert-back-end-service) | Data | Auxilary Backend Service | JavaScript | 2025-12-09 | 2026-08-10T09:25:53 | Active | aqie-forecast-api, aqie-front-end, aqie-notify-service |
+| [aqie-back-end](https://github.com/DEFRA/aqie-back-end) | Data | Core Backend Service | JavaScript | 2024-02-26 | 2026-08-25T15:29:11 | Active | aqie-demo-data-visualisations, aqie-front-end, aqie-maps-frontend, aqie-maps-prototype, aqie-monitoringstation-backend |
+| [aqie-data-priv-beta-api-perftest](https://github.com/DEFRA/aqie-data-priv-beta-api-perftest) | Shared | Quality/Test Service | Shell | 2025-04-11 | 2025-05-07T22:45:49 | Inactive | — |
+| [aqie-data-privatebeta-perftest](https://github.com/DEFRA/aqie-data-privatebeta-perftest) | Shared | Quality/Test Service | Shell | 2025-04-03 | 2026-02-05T09:14:40 | Inactive | — |
+| [aqie-data-service-backend](https://github.com/DEFRA/aqie-data-service-backend) | Data | Auxilary Backend Service | JavaScript | 2025-01-23 | 2025-02-20T13:28:22 | Archived | — |
+| [aqie-dataselector-frontend](https://github.com/DEFRA/aqie-dataselector-frontend) | Citizen | Auxilary Frontend | JavaScript | 2025-02-14 | 2026-09-15T10:34:28 | Active | aqie-historicaldata-backend, aqie-location-backend, aqie-monitoringstation-backend |
+| [aqie-dataselector-perf-frontend](https://github.com/DEFRA/aqie-dataselector-perf-frontend) | Shared | Quality/Test Service | JavaScript | 2025-03-17 | 2025-04-10T15:16:14 | Archived | — |
+| [aqie-dc-admin-frontend](https://github.com/DEFRA/aqie-dc-admin-frontend) | Citizen | Auxilary Frontend | JavaScript | 2026-02-03 | 2026-09-15T08:44:45 | Active | aqie-dc-backend |
+| [aqie-dc-backend](https://github.com/DEFRA/aqie-dc-backend) | Data | Auxilary Backend Service | JavaScript | 2026-01-26 | 2026-09-14T15:26:12 | Active | aqie-dc-admin-frontend, aqie-dc-frontend |
+| [aqie-dc-frontend](https://github.com/DEFRA/aqie-dc-frontend) | Citizen | Auxilary Frontend | JavaScript | 2026-01-26 | 2026-04-21T09:16:55 | Monitoring | aqie-dc-backend |
+| [aqie-dc-poc-backend](https://github.com/DEFRA/aqie-dc-poc-backend) | Data | Prototype Service (including PoC) | JavaScript | 2026-05-14 | 2026-05-14T09:00:44 | Monitoring | — |
+| [aqie-dc-poc-frontend](https://github.com/DEFRA/aqie-dc-poc-frontend) | Citizen | Prototype Service (including PoC) | JavaScript | 2026-05-14 | 2026-05-14T09:32:58 | Monitoring | — |
+| [aqie-demo-data-visualisations](https://github.com/DEFRA/aqie-demo-data-visualisations) | Citizen | Demo Service | JavaScript | 2026-07-30 | 2026-09-09T10:11:22 | Active | aqie-back-end |
+| [aqie-docanalysisawspoc-frontend](https://github.com/DEFRA/aqie-docanalysisawspoc-frontend) | Citizen | Prototype Service (including PoC) | JavaScript | 2025-07-23 | 2025-12-17T16:10:49 | Inactive | aqie-docanalysispoc-backend |
+| [aqie-docanalysispoc-backend](https://github.com/DEFRA/aqie-docanalysispoc-backend) | Data | Prototype Service (including PoC) | JavaScript | 2025-07-22 | 2025-10-29T16:35:46 | Inactive | aqie-docanalysisawspoc-frontend, aqie-docanalysispoc-frontend |
+| [aqie-docanalysispoc-frontend](https://github.com/DEFRA/aqie-docanalysispoc-frontend) | Citizen | Prototype Service (including PoC) | JavaScript | 2025-07-17 | 2025-08-21T08:01:20 | Inactive | aqie-docanalysispoc-backend |
+| [aqie-forecast-api](https://github.com/DEFRA/aqie-forecast-api) | Data | Auxilary Backend Service | JavaScript | 2025-05-15 | 2026-06-08T17:08:07 | Monitoring | aqie-alert-back-end-service, aqie-front-end, aqie-maps-frontend, aqie-maps-prototype |
+| [aqie-front-end](https://github.com/DEFRA/aqie-front-end) | Citizen | Core Frontend Service | JavaScript | 2024-02-02 | 2026-09-02T16:29:50 | Active | aqie-alert-back-end-service, aqie-back-end, aqie-forecast-api, aqie-notify-service |
+| [aqie-historicaldata-backend](https://github.com/DEFRA/aqie-historicaldata-backend) | Data | Auxilary Backend Service | C# | 2025-02-24 | 2026-09-09T12:25:08 | Active | aqie-dataselector-frontend, aqie-notify-service |
+| [aqie-historicaldata-perf-backend](https://github.com/DEFRA/aqie-historicaldata-perf-backend) | Shared | Quality/Test Service | C# | 2025-03-17 | 2025-03-27T10:27:22 | Archived | — |
+| [aqie-kpi-metrics-dashboard](https://github.com/DEFRA/aqie-kpi-metrics-dashboard) | Shared | Data/Analytics Support Service | JavaScript | 2026-02-09 | 2026-03-11T11:28:24 | Inactive | — |
+| [aqie-laqm-data-explorer](https://github.com/DEFRA/aqie-laqm-data-explorer) | Citizen | Data/Analytics Support Service | HTML | 2026-06-30 | 2026-07-08T14:16:27 | Active | — |
+| [aqie-location-backend](https://github.com/DEFRA/aqie-location-backend) | Data | Auxilary Backend Service | JavaScript | 2025-02-14 | 2026-05-19T15:31:48 | Monitoring | aqie-dataselector-frontend, aqie-monitoringstation-backend, aqie-prtr-backend |
+| [aqie-location-perf-backend](https://github.com/DEFRA/aqie-location-perf-backend) | Shared | Quality/Test Service | JavaScript | 2025-03-17 | 2025-03-20T15:39:56 | Archived | — |
+| [aqie-maps-frontend](https://github.com/DEFRA/aqie-maps-frontend) | Citizen | Auxilary Frontend | JavaScript | 2026-06-08 | 2026-08-25T08:32:08 | Active | aqie-back-end, aqie-forecast-api |
+| [aqie-maps-prototype](https://github.com/DEFRA/aqie-maps-prototype) | Citizen | Prototype Service (including PoC) | JavaScript | 2026-05-05 | 2026-06-05T15:31:51 | Monitoring | aqie-back-end, aqie-forecast-api |
+| [aqie-monitoringstation-backend](https://github.com/DEFRA/aqie-monitoringstation-backend) | Data | Auxilary Backend Service | JavaScript | 2025-02-14 | 2026-03-18T12:21:35 | Inactive | aqie-back-end, aqie-dataselector-frontend, aqie-location-backend |
+| [aqie-monitorstation-perf-backend](https://github.com/DEFRA/aqie-monitorstation-perf-backend) | Shared | Quality/Test Service | JavaScript | 2025-03-17 | 2025-03-17T16:09:37 | Archived | — |
+| [aqie-notify-service](https://github.com/DEFRA/aqie-notify-service) | Data | Auxilary Backend Service | JavaScript | 2025-09-16 | 2026-05-28T08:59:17 | Monitoring | aqie-alert-back-end-service, aqie-front-end, aqie-historicaldata-backend |
+| [aqie-performance-test](https://github.com/DEFRA/aqie-performance-test) | Shared | Quality/Test Service | — | 2024-08-15 | 2024-08-21T12:17:55 | Inactive | — |
+| [aqie-privatebeta-api-perftest](https://github.com/DEFRA/aqie-privatebeta-api-perftest) | Shared | Quality/Test Service | Shell | 2024-09-06 | 2026-07-23T22:15:02 | Active | — |
+| [aqie-privatebeta-perftest](https://github.com/DEFRA/aqie-privatebeta-perftest) | Shared | Quality/Test Service | HTML | 2024-08-21 | 2026-08-19T07:54:43 | Active | — |
+| [aqie-privatebeta-test](https://github.com/DEFRA/aqie-privatebeta-test) | Shared | Quality/Test Service | JavaScript | 2024-03-15 | 2026-08-06T12:20:53 | Active | — |
+| [aqie-prtr-backend](https://github.com/DEFRA/aqie-prtr-backend) | Data | Auxilary Backend Service | JavaScript | 2026-05-21 | 2026-07-23T14:41:04 | Active | aqie-location-backend, aqie-prtr-frontend |
+| [aqie-prtr-frontend](https://github.com/DEFRA/aqie-prtr-frontend) | Citizen | Auxilary Frontend | JavaScript | 2026-05-21 | 2026-07-23T14:40:22 | Active | aqie-prtr-backend |
+| [aqie-prtr-journey-tests](https://github.com/DEFRA/aqie-prtr-journey-tests) | Shared | Quality/Test Service | JavaScript | 2026-05-20 | 2026-08-21T16:09:41 | Active | — |
+| [aqie-prtr-perftest](https://github.com/DEFRA/aqie-prtr-perftest) | Shared | Quality/Test Service | Shell | 2026-06-19 | 2026-06-19T12:09:52 | Active | — |
+| [aqie-publicbeta-test](https://github.com/DEFRA/aqie-publicbeta-test) | Shared | Quality/Test Service | JavaScript | 2024-08-29 | 2025-11-28T14:28:33 | Inactive | — |

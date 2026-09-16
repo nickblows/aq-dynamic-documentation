@@ -2,6 +2,65 @@
 
 Record each update cycle in reverse chronological order.
 
+### Run: `2026-09-15T12:00:00Z`
+
+- Trigger: Deep analysis and enrichment of the full AQIE estate
+- Agent/Operator: Copilot Task Agent
+- Repositories checked: **39** (all AQIE repositories, shallow clone of `main`)
+- Repositories changed (main deltas found): n/a — full baseline analysis
+- Documentation files updated:
+  - `/docs/integration-catalog.yaml` (new)
+  - `/docs/services/<domain>/<service>/service-profile.md` (39 new)
+  - `/docs/services/shared/overview.md` (new)
+  - `/docs/services/citizen/overview.md`, `/docs/services/data/overview.md` (rewritten)
+  - `/docs/master/system-landscape.md` (rewritten)
+  - `/docs/services/_templates/service-profile-template.md` (rewritten)
+  - `/docs/audit/security-findings.md` (new)
+  - `/docs/diagrams/generated/` (8 new generated files)
+  - `/docs/agent-instructions/dynamic-update-instructions.md` (rewritten)
+  - `/docs/workflows/dynamic-update-workflow.md` (rewritten)
+  - `/docs/repository-catalog.yaml`, `/docs/repositories/aqie-repository-inventory.md` (regenerated)
+  - `/scripts/generate_diagrams.py` (new)
+  - `/scripts/update_aqie_repository_metadata.py` (corrected)
+  - `/README.md`, `/docs/introduction.md`
+  - Removed: `/docs/services/citizen/sub-services.md`, `/docs/services/data/sub-services.md`
+    (superseded by domain overviews)
+- Master documentation updated: `yes`
+- Diagrams updated: `yes` — Mermaid diagrams now generated from the integration catalogue
+- Agent instruction updates: `yes`
+
+#### Corrections to previously recorded metadata
+
+- **Repository count was wrong.** The catalog tracked 30 repositories; 39 exist. Discovery
+  used the org listing endpoint, which missed archived and older repositories. Now uses the
+  GitHub search API.
+- **`connected_services` was fabricated.** Values were derived from a `family()` function
+  that grouped repositories by name substring (`dc-`, `prtr`, `maps`), not from any code
+  analysis. Replaced with evidence-backed edges read from the integration catalogue.
+- **Domain classification was wrong for several services**, including `aqie-back-end`
+  (listed `Shared`, is `Data`). Replaced name-based inference with an explicit override map.
+- **`activity_status` did not distinguish archived repositories.** Added `Archived`.
+
+#### Analysis outcome
+
+- 53 integrations recorded with evidence, of which 26 are internal service-to-service edges.
+- 16 external and platform systems identified.
+- 5 previously assumed edges investigated and disproved, recorded under `refuted_edges`.
+- 13 open questions raised for service owners.
+- 38 security and information governance findings recorded separately.
+
+#### Notes/Risks
+
+- All documentation is derived from static analysis of public `main` branches and has **not
+  been reviewed by service owners**. Treat open questions as genuinely open.
+- Several findings are high severity, including credentials committed to public
+  repositories and an admin interface where authentication is configured but not enforced.
+  See `/docs/audit/security-findings.md`.
+- The public smoke control register appears to have a broken frontend/backend contract
+  (`oq-006`); this needs confirmation before it is treated as fact.
+
+---
+
 ### Run: `2026-09-15T09:35:54Z`
 
 - Trigger: Add README quick links for core documentation

@@ -1,54 +1,93 @@
-# <Service Name>
+# <service-name>
 
-## Service Metadata
+> One-line summary of what this service does and who it serves.
 
-- Domain: `<Citizen|Data>`
-- Service Type: `<Primary|Sub-service>`
-- Repository URL: `<https://github.com/org/repo>`
-- Default Branch: `main`
-- Last Analysed At (UTC): `<YYYY-MM-DDTHH:MM:SSZ>`
-- Last Analysed Main Commit: `<commit-sha>`
-- Documentation Owner: `<team/person>`
+## 1. Service Metadata
 
-## What This Service Does
+| Field | Value |
+|---|---|
+| Repository | [`DEFRA/<service-name>`](https://github.com/DEFRA/<service-name>) |
+| Service domain | `Citizen` \| `Data` \| `Shared` |
+| Service type | `<taxonomy value from repository-catalog.yaml>` |
+| Lifecycle stage | `Production` \| `Beta` \| `Prototype/PoC` \| `Archived` |
+| Primary language | `<language>` |
+| Runtime | `<e.g. Node.js >=22, .NET 8>` |
+| Default branch | `main` |
+| Created (UTC) | `<YYYY-MM-DD>` |
+| Last main commit (UTC) | `<YYYY-MM-DDTHH:MM:SSZ>` |
+| Last analysed commit | `<sha>` |
+| Last analysed (UTC) | `<YYYY-MM-DDTHH:MM:SSZ>` |
+| Activity status | `Active` \| `Monitoring` \| `Inactive` |
 
-<Purpose, key responsibilities, and scope boundaries.>
+## 2. Purpose and Responsibilities
 
-## Technology
+**Does:**
 
-- Languages:
-- Frameworks:
-- Data stores:
-- Messaging/integration tech:
+- <responsibility>
 
-## Architecture
+**Does not:**
 
-- Pattern/style:
-- Core components:
-- Upstream dependencies:
-- Downstream consumers:
+- <explicit scope boundary — what callers must go elsewhere for>
 
-## Hosting
+## 3. Architecture
 
-- Cloud/provider:
-- Runtime/platform:
-- Environment model:
-- Deployment approach:
+- **Pattern:** <e.g. Hapi HTTP API + scheduled ingest workers>
+- **Key components:**
 
-## Data and Integrations
+| Component | Path | Responsibility |
+|---|---|---|
+| <name> | `src/...` | <what it does> |
 
-- Inputs:
-- Outputs:
-- External APIs/services:
-- Contracts/schemas:
+## 4. API Surface
 
-## Recent Main-Branch Changes (Since Last Analysis)
+<Endpoints this service exposes. Omit the table if the service exposes none.>
 
-- Analysis window: `<previous-main-commit>...<latest-main-commit>`
-- Summary of changes:
-- Documentation impacts:
-- Diagram impacts:
+| Method | Path | Purpose | Request | Response |
+|---|---|---|---|---|
+| `GET` | `/health` | Liveness probe | — | `{ message }` |
 
-## Open Questions / Follow-up
+## 5. Consumes (Outbound Dependencies)
 
-- <items requiring human clarification>
+| Target | Type | Endpoint / Mechanism | Data exchanged | Auth |
+|---|---|---|---|---|
+| <service or external system> | `AQIE service` \| `External API` \| `Datastore` | `<path or protocol>` | <payload summary> | <mechanism, never values> |
+
+## 6. Consumed By (Inbound Dependencies)
+
+| Consumer | Endpoint used | Data exchanged |
+|---|---|---|
+| <service> | `<path>` | <summary> |
+
+> Inbound and outbound edges are mastered in `/docs/integration-catalog.yaml`.
+> From a service profile, link to it as `../../../integration-catalog.yaml`.
+
+## 7. Data
+
+- **Stores:** <MongoDB collections, Redis usage, S3 buckets, etc.>
+- **Key entities:** <domain objects and their shape at a summary level>
+- **Retention / refresh:** <schedules, TTLs, cache windows>
+
+## 8. Configuration
+
+Environment variable **names** only — never record values.
+
+| Variable | Purpose |
+|---|---|
+| `PORT` | HTTP listen port |
+
+## 9. Hosting and Deployment
+
+- **Platform:** <e.g. DEFRA CDP (AWS ECS Fargate)>
+- **Container:** <base image, exposed port>
+- **Environments:** <dev / test / perf-test / prod>
+- **Pipelines:** <workflow files and triggers>
+
+## 10. Observability
+
+- **Logging:** <library and format>
+- **Tracing:** <mechanism>
+- **Metrics:** <mechanism>
+
+## 11. Open Questions
+
+- [ ] <item needing owner confirmation>
