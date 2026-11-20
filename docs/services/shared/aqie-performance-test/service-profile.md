@@ -79,3 +79,6 @@ None.
       working test plan, and its fixtures live on in `aqie-privatebeta-perftest`.
 - [ ] Confirm the one-byte `.jmx` file is a mistake rather than a stripped artefact that
       should be recovered from history.
+- [ ] The repository is private on GitHub (observed 2026-11-17), whereas this documentation
+      library is public and is described as derived from public `main` branches. Confirm
+      whether this profile should be kept, redacted or removed.

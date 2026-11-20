@@ -62,7 +62,7 @@ This is a test harness and exposes no API.
 | Target | Type | Endpoint / Mechanism | Data exchanged | Auth |
 |---|---|---|---|---|
 | `aqie-front-end` | AQIE service | `https://aqie-front-end.<ENVIRONMENT>.cdp-int.defra.cloud/` — browser base URL | Whole site under test | Holding-page password |
-| `aqie-back-end` | AQIE service | `GET /measurements` | Pollutant concentrations used to derive expected page values | None (internal) |
+| `aqie-back-end` | AQIE service | `GET /measurements` — **endpoint removed by [PR #163](https://github.com/DEFRA/aqie-back-end/pull/163); assertions sourcing expected values from it will now fail** | Pollutant concentrations used to derive expected page values | None (internal) |
 | DEFRA UK-AIR website | External | `https://uk-air.defra.gov.uk/ajax/forecast_text_summary.php` | Forecast summary text for assertion | None |
 | DEFRA UK-AIR website | External | `https://uk-air.defra.gov.uk/assets/rss/forecast.xml` | Forecast RSS feed for assertion | None |
 | AWS S3 | Datastore | `RESULTS_OUTPUT_S3_PATH` | Allure report upload | CDP task role |
@@ -86,7 +86,7 @@ Variable names only — values are held in CDP secrets and never recorded here.
 | `ENVIRONMENT` | Selects the target CDP environment in the base URL |
 | `DAQIE_PASSWORD` | Holding-page password for the service under test |
 | `FORECAST_SUMMARY_URL`, `FORECAST_URL` | UK-AIR forecast sources |
-| `MEASUREMENTS_API_URL` | `aqie-back-end` measurements endpoint |
+| `MEASUREMENTS_API_URL` | **Dead config.** Pointed at `aqie-back-end` `/measurements`, now removed. Repoint at `/monitoringStationInfo` or drop the assertions that use it |
 | `CHROMEDRIVER_URL`, `CHROMEDRIVER_PORT` | WebDriver endpoint |
 | `HTTP_PROXY`, `HTTPS_PROXY` | CDP egress proxy |
 | `RESULTS_OUTPUT_S3_PATH`, `RUN_ID` | Result publishing |

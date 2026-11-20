@@ -64,8 +64,12 @@ This is a test harness and exposes no API.
 
 > The **GET** forms used here differ from the POST forms recorded in
 > [`/docs/integration-catalog.yaml`](../../../integration-catalog.yaml) for
-> `/monitoringstation` and `/osnameplaces`. Either both verbs are supported or the test
-> plan has drifted — worth confirming against the service source.
+> `/monitoringstation` and `/osnameplaces`, and it is the test plan that has drifted. Read
+> from source (not run): `aqie-location-backend` registers only `POST /osnameplaces` and
+> `aqie-monitoringstation-backend` registers `POST /monitoringstation`. The GET
+> path-parameter forms used here (`/monitoringstation/location=...` and
+> `/osnameplaces/userLocation=...`) were replaced under ticket `aqd-727` in August 2025, so
+> these GET requests would now return `404` (catalogue `oq-009`, answered).
 
 ## 6. Consumed By (Inbound Dependencies)
 
@@ -103,9 +107,13 @@ Variable names only — values are held in CDP secrets and never recorded here.
 
 ## 11. Open Questions
 
-- [ ] The plan covers only two of the nine `aqie-historicaldata-backend` Atom endpoints and
+- [ ] The plan covers only two of the eleven `aqie-historicaldata-backend` Atom endpoints and
       predates the custom dataset work. Is it still representative?
-- [ ] Confirm whether `/monitoringstation` and `/osnameplaces` accept GET as well as POST.
+- [x] Do `/monitoringstation` and `/osnameplaces` accept GET as well as POST? Answered
+      (catalogue `oq-009`): no, not on the services this plan calls. `aqie-location-backend`
+      registers only `POST /osnameplaces` and `aqie-monitoringstation-backend` registers
+      `POST /monitoringstation`, so the plan's GET requests would now return `404` (read from
+      source; not run).
 - [ ] The repository name is easily confused with `aqie-data-privatebeta-perftest`. Consider
       renaming to make the API-versus-UI split obvious.
 - [ ] Has this suite been run since May 2025? If not, confirm whether it should be revived

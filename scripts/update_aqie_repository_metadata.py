@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -19,6 +20,11 @@ ROOT = Path(__file__).resolve().parent.parent
 CATALOG_PATH = ROOT / "docs/repository-catalog.yaml"
 INVENTORY_PATH = ROOT / "docs/repositories/aqie-repository-inventory.md"
 INTEGRATION_CATALOG_PATH = ROOT / "docs/integration-catalog.yaml"
+SERVICES_PATH = ROOT / "docs/services"
+
+# Matches the analysis point recorded in each service profile's metadata table.
+ANALYSED_COMMIT_RE = re.compile(r"^\|\s*Last analysed commit\s*\|\s*`?([0-9a-f]{7,40})`?\s*\|", re.MULTILINE)
+ANALYSED_AT_RE = re.compile(r"^\|\s*Last analysed \(UTC\)\s*\|\s*`?(\d{4}-\d\d-\d\dT[0-9:]+Z)`?\s*\|", re.MULTILINE)
 
 # Curated classification. Name-based heuristics produced wrong domains and
 # invented connections, so anything known is stated explicitly here and the
@@ -43,6 +49,8 @@ SERVICE_OVERRIDES: dict[str, tuple[str, str]] = {
     "aqie-dc-poc-backend": ("Data", "Prototype Service (including PoC)"),
     "aqie-prtr-frontend": ("Citizen", "Auxilary Frontend"),
     "aqie-prtr-backend": ("Data", "Auxilary Backend Service"),
+    "aqie-prtr-submissions-frontend": ("Citizen", "Auxilary Frontend"),
+    "aqie-prtr-submissions-backend": ("Data", "Auxilary Backend Service"),
     "aqie-demo-data-visualisations": ("Citizen", "Demo Service"),
     "aqie-laqm-data-explorer": ("Citizen", "Data/Analytics Support Service"),
     "aqie-kpi-metrics-dashboard": ("Shared", "Data/Analytics Support Service"),
@@ -64,6 +72,7 @@ class Repo:
     archived: bool = False
     description: str | None = None
     language: str | None = None
+    main_head_sha: str | None = None
 
 
 def api_get(url: str, token: str) -> Any:
@@ -141,6 +150,42 @@ def load_confirmed_connections() -> dict[str, set[str]]:
     return edges
 
 
+def load_analysed_state() -> dict[str, tuple[str | None, str | None]]:
+    """Read the commit and time each service profile was last analysed at.
+
+    The profiles hold this state, so reading it here stops a metadata refresh
+    from resetting it and lets the delta check compare against it.
+    """
+    state: dict[str, tuple[str | None, str | None]] = {}
+    for profile in SERVICES_PATH.glob("*/*/service-profile.md"):
+        text = profile.read_text(encoding="utf-8")
+        commit = ANALYSED_COMMIT_RE.search(text)
+        analysed_at = ANALYSED_AT_RE.search(text)
+        state[profile.parent.name] = (
+            commit.group(1) if commit else None,
+            analysed_at.group(1) if analysed_at else None,
+        )
+    return state
+
+
+def report_deltas(repos: list[Repo], analysed: dict[str, tuple[str | None, str | None]]) -> None:
+    """Print repositories whose default branch has moved since their last analysis."""
+    changed = [
+        r.name
+        for r in repos
+        if analysed.get(r.name, (None, None))[0]
+        and r.main_head_sha
+        and not r.main_head_sha.startswith(analysed[r.name][0])
+    ]
+    unprofiled = [r.name for r in repos if not analysed.get(r.name, (None, None))[0]]
+    print(f"Repositories with new commits on the default branch since last analysis: {len(changed)}")
+    for name in changed:
+        print(f"  {name}")
+    print(f"Repositories with no analysed profile: {len(unprofiled)}")
+    for name in unprofiled:
+        print(f"  {name}")
+
+
 def activity_status(last_modified: str | None, now: datetime) -> str:
     if not last_modified:
         return "Unknown"
@@ -182,11 +227,13 @@ def fetch_repositories(token: str) -> list[Repo]:
         repo = raw_repos[repo_name]
         default_branch = repo.get("default_branch", "main")
         branch_url = f"https://api.github.com/repos/DEFRA/{quote(repo_name)}/branches/{quote(default_branch)}"
+        main_head_sha = None
         try:
             branch = api_get(branch_url, token)
             main_last_modified = (
                 branch.get("commit", {}).get("commit", {}).get("committer", {}).get("date")
             )
+            main_head_sha = branch.get("commit", {}).get("sha")
         except RuntimeError:
             main_last_modified = repo.get("pushed_at")
         repos.append(
@@ -199,12 +246,13 @@ def fetch_repositories(token: str) -> list[Repo]:
                 archived=bool(repo.get("archived")),
                 description=repo.get("description"),
                 language=repo.get("language"),
+                main_head_sha=main_head_sha,
             )
         )
     return repos
 
 
-def write_catalog(repos: list[Repo], now: datetime) -> None:
+def write_catalog(repos: list[Repo], now: datetime, analysed: dict[str, tuple[str | None, str | None]]) -> None:
     connections = load_confirmed_connections()
     known = {r.name for r in repos}
 
@@ -241,6 +289,7 @@ def write_catalog(repos: list[Repo], now: datetime) -> None:
 
     for repo in repos:
         connected = sorted(connections.get(repo.name, set()) & known)
+        analysed_commit, analysed_at = analysed.get(repo.name, (None, None))
         lines.extend(
             [
                 f'  - service_domain: "{domain(repo.name)}"',
@@ -257,8 +306,12 @@ def write_catalog(repos: list[Repo], now: datetime) -> None:
                     else "    last_modified_at_utc: null"
                 ),
                 f'    activity_status: "{"Archived" if repo.archived else activity_status(repo.main_last_modified_at, now)}"',
-                "    last_analysed_at_utc: null",
-                "    last_analysed_main_commit: null",
+                f'    last_analysed_at_utc: "{analysed_at}"' if analysed_at else "    last_analysed_at_utc: null",
+                (
+                    f'    last_analysed_main_commit: "{analysed_commit}"'
+                    if analysed_commit
+                    else "    last_analysed_main_commit: null"
+                ),
             ]
         )
         if connected:
@@ -311,9 +364,11 @@ def main() -> int:
         return 1
     now = datetime.now(UTC)
     repos = fetch_repositories(token)
-    write_catalog(repos, now)
+    analysed = load_analysed_state()
+    write_catalog(repos, now, analysed)
     write_inventory(repos, now)
     print(f"Updated metadata for {len(repos)} repositories.")
+    report_deltas(repos, analysed)
     return 0
 
 

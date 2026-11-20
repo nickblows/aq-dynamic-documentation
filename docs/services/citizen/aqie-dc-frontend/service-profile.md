@@ -19,7 +19,7 @@
 | Last main commit (UTC) | `2026-04-21T09:16:55Z` |
 | Last analysed commit | `0100dc25` |
 | Last analysed (UTC) | `2026-09-15T00:00:00Z` |
-| Activity status | `Monitoring` |
+| Activity status | `Inactive` |
 
 ## 2. Purpose and Responsibilities
 
@@ -94,9 +94,9 @@ backend.
 | Redis | Datastore | `catbox-redis` session cache | Session state only | `REDIS_USERNAME` / `REDIS_PASSWORD` |
 | GOV.UK | External (link only) | `SCA_URL`, `DEFRA_URL` and GOV.UK footer links | Outbound hyperlinks; no data exchanged | None |
 
-> The two backend paths above are what the code actually calls. They do not match the
-> endpoints currently recorded for this edge in the integration catalogue, and they are not
-> served by `aqie-dc-backend` on `main` — see Section 11.
+> The two backend paths above are what the code actually calls, and the integration catalogue
+> now records the same two paths for this edge. `aqie-dc-backend` does not serve either of
+> them on `main` (catalogue `oq-006`) — see Section 11.
 
 ## 6. Consumed By (Inbound Dependencies)
 
@@ -163,16 +163,20 @@ Environment variable names only — never values.
 
 ## 11. Open Questions
 
-- [ ] **The frontend and backend contracts do not line up.** This service calls
-      `GET /get-all/{type}` and `GET /get/{type}/{id}`; `aqie-dc-backend` on `main` serves
-      `GET /api/appliances/search`, `GET /api/fuels/search`, `GET /appliances` and
-      `GET /fuels`. Confirm whether the deployed public register is currently working, and
-      which side is expected to change.
-- [ ] The integration catalogue records this edge as using `/api/appliances/search`,
-      `/api/fuels/search` and `POST /applications`. There is no `POST` to the backend anywhere
-      in this repository. The catalogue entry needs correcting.
+- [ ] **The frontend and backend contracts do not line up (catalogue `oq-006`, high).** This
+      service calls `GET /get-all/{type}` and `GET /get/{type}/{id}`, and `aqie-dc-backend` on
+      `main` serves neither (checked at `49f950cd`; there is no catch-all route). Its public
+      read routes are `GET /appliances` and `GET /fuels` (live items only),
+      `GET /appliances/{id}`, `GET /fuels/{fuelId}` and `GET /api/fuels/search`. There is no
+      public appliance search. The response shapes also differ: the appliance summary carries
+      `permittedFuels` where this service reads `fuels`, so changing only the paths would not
+      fix the appliance list. Confirm whether the deployed public register is currently
+      working, and which side is expected to change.
+- [x] The integration catalogue now records this edge as the two paths this service calls,
+      `GET /get-all/{type}` and `GET /get/{type}/{id}`, and marks the contract as broken
+      (catalogue `oq-006`). This service makes no `POST` to the backend.
 - [ ] `CDP_X_API_KEY` is sent on every backend request but `aqie-dc-backend` does not read it.
-      Confirm where, if anywhere, that key is enforced.
+      Confirm where, if anywhere, that key is enforced. (catalogue `oq-022`)
 - [ ] The service was last changed in April 2026 while the backend and admin frontend have
       continued to move. Confirm whether the public register is still in active development or
       awaiting a rebuild against the current backend contract.

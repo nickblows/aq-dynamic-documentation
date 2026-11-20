@@ -10,15 +10,15 @@ a GitHub workflow.
 
 | Repository | System under test | Framework | Status | Profile |
 |---|---|---|---|---|
-| `aqie-privatebeta-test` | `aqie-front-end` | WebdriverIO 8 / Mocha / Allure | Active — best maintained | [Profile](aqie-privatebeta-test/service-profile.md) |
+| `aqie-privatebeta-test` | `aqie-front-end` | WebdriverIO 8 / Mocha / Allure | Monitoring — best maintained | [Profile](aqie-privatebeta-test/service-profile.md) |
 | `aqie-prtr-journey-tests` | `aqie-prtr-frontend` | WebdriverIO 9 / Mocha / Allure | Active | [Profile](aqie-prtr-journey-tests/service-profile.md) |
-| `aqie-privatebeta-perftest` | `aqie-front-end` UI, notify and alert services | JMeter | Active | [Profile](aqie-privatebeta-perftest/service-profile.md) |
-| `aqie-privatebeta-api-perftest` | `aqie-back-end` API, Ricardo alerts | JMeter | Active | [Profile](aqie-privatebeta-api-perftest/service-profile.md) |
-| `aqie-data-privatebeta-perftest` | `aqie-dataselector-frontend` UI | JMeter | Active but drifting — targets `dev` | [Profile](aqie-data-privatebeta-perftest/service-profile.md) |
-| `aqie-data-priv-beta-api-perftest` | Location, monitoring station and historic data APIs | JMeter | Stale | [Profile](aqie-data-priv-beta-api-perftest/service-profile.md) |
+| `aqie-privatebeta-perftest` | `aqie-front-end` UI, notify and alert services | JMeter | Monitoring | [Profile](aqie-privatebeta-perftest/service-profile.md) |
+| `aqie-privatebeta-api-perftest` | `aqie-back-end` API, Ricardo alerts | JMeter | Monitoring | [Profile](aqie-privatebeta-api-perftest/service-profile.md) |
+| `aqie-data-privatebeta-perftest` | `aqie-dataselector-frontend` UI | JMeter | Inactive — drifting, targets `dev`; the UI has changed since the plans were recorded | [Profile](aqie-data-privatebeta-perftest/service-profile.md) |
+| `aqie-data-priv-beta-api-perftest` | Location, monitoring station and historic data APIs | JMeter | Stale — its plans use GET forms that the services replaced with POST in August 2025 | [Profile](aqie-data-priv-beta-api-perftest/service-profile.md) |
 | `aqie-publicbeta-test` | `aqie-front-end`, `aqie-back-end` | WebdriverIO 8 / Mocha | Redundant — subset of `aqie-privatebeta-test` | [Profile](aqie-publicbeta-test/service-profile.md) |
 | `aqie-prtr-perftest` | Nothing — placeholder host | JMeter | Scaffolded, unconfigured | [Profile](aqie-prtr-perftest/service-profile.md) |
-| `aqie-performance-test` | Nothing — test plan is 1 byte | JMeter (intended) | Abandoned | [Profile](aqie-performance-test/service-profile.md) |
+| `aqie-performance-test` | Nothing — test plan is 1 byte | JMeter (intended) | Abandoned; now a private repository, so it cannot be re-read | [Profile](aqie-performance-test/service-profile.md) |
 
 ### Naming caution
 

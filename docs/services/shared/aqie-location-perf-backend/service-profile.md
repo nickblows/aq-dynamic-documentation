@@ -64,6 +64,9 @@ scripts themselves live elsewhere.
 | `GET` | `/osnameplaces/userLocation={userLocation}` | Place-name search |
 | `GET` | `/example`, `/example/{exampleId}` | Unmodified CDP template routes |
 
+The live `aqie-location-backend` now accepts `POST /osnameplaces` with a JSON body instead of
+this pre-August 2025 GET form (ticket `aqd-727`).
+
 ## 5. Consumes (Outbound Dependencies)
 
 | Target | Type | Endpoint / Mechanism | Data exchanged | Auth |
@@ -120,8 +123,8 @@ No secret values are committed.
 ## 11. Open Questions
 
 - [ ] Where are the load-test scripts and results for the March 2025 exercise? They are not in
-      this repository. Check `aqie-performance-test` and
-      `aqie-data-priv-beta-api-perftest`, which are not currently in the catalogue.
+      this repository. Check `aqie-performance-test` (now a private repository) and
+      `aqie-data-priv-beta-api-perftest`, both of which are profiled in this documentation set.
 - [ ] Was this fork ever actually deployed and driven, or was the exercise run against the
       production services instead? The frontend fork points at production hosts, which suggests
       the perf backends may never have been wired in.

@@ -18,7 +18,7 @@
 | Last main commit (UTC) | `2026-07-23T22:15:02Z` |
 | Last analysed commit | `30ce55d` |
 | Last analysed (UTC) | `2026-09-15T00:00:00Z` |
-| Activity status | `Active` |
+| Activity status | `Monitoring` |
 
 ## 2. Purpose and Responsibilities
 
@@ -61,15 +61,18 @@ This is a test harness and exposes no API.
 
 | Target | Type | Endpoint / Mechanism | Data exchanged | Auth |
 |---|---|---|---|---|
-| `aqie-back-end` | AQIE service | `GET https://aqie-back-end.perf-test.cdp-int.defra.cloud/forecasts` | Forecast records | None (internal) |
-| `aqie-back-end` | AQIE service | `GET https://aqie-back-end.perf-test.cdp-int.defra.cloud/measurements` | Pollutant concentrations and DAQI bands | None (internal) |
+| `aqie-back-end` | AQIE service | `GET .../forecasts` — **endpoint removed by [PR #163](https://github.com/DEFRA/aqie-back-end/pull/163)** | Forecast records | None (internal) |
+| `aqie-back-end` | AQIE service | `GET .../measurements` — **endpoint removed by [PR #163](https://github.com/DEFRA/aqie-back-end/pull/163)** | Pollutant concentrations and DAQI bands | None (internal) |
 | Ricardo UK-AIR | External API | `POST https://uk-air-api.staging.rcdo.co.uk/api/login_check` | Credentials exchanged for bearer token | Email/password form post |
 | Ricardo UK-AIR | External API | `GET https://api-ukair.defra.gov.uk/api/daqi_alerts` | DAQI alert records over a date range | Bearer token |
 | AWS S3 | Datastore | `RESULTS_OUTPUT_S3_PATH` | JMeter HTML dashboard upload | CDP task role |
 
 > The plans authenticate against the Ricardo **staging** host but then query the
 > **production** host for alerts. This mismatch is worth confirming with the service
-> owner — it mirrors an inconsistency already recorded for `aqie-back-end`.
+> owner. It no longer mirrors `aqie-back-end`: per CDP environment configuration all four of
+> that service's Ricardo URL variables are set in its service-wide defaults, none is
+> overridden per environment and none points at the supplier's staging host (catalogue
+> `oq-012`, now low).
 
 ## 6. Consumed By (Inbound Dependencies)
 
@@ -116,6 +119,8 @@ Variable names only — values are held in CDP secrets and never recorded here.
       and move to a JMeter property supplied from a CDP secret. The value is not recorded here.
 - [ ] Authentication targets the Ricardo staging host while the alerts query targets the
       production host. Which is correct?
-- [ ] The entrypoint hardcodes the high-alert plan, so the `/forecasts` and `/measurements`
-      load tests never run from the published image. Was that intended?
+- [ ] The `/forecasts` and `/measurements` load-test plans target endpoints that no longer
+      exist. The entrypoint hardcodes the high-alert plan, so they never ran from the
+      published image anyway. Delete them, or repoint them at `/monitoringStationInfo` — which
+      is the endpoint most in need of load testing, given its `1 + 5N` upstream fan-out.
 - [ ] `scenarios/test.jmx` duplicates another plan and can probably be deleted.

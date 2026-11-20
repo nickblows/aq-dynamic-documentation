@@ -29,6 +29,17 @@ Run a repeatable, evidence-based update of AQIE documentation using repository d
 5. **Never guess connections from repository names.** This produced materially wrong output
    in earlier versions of this repository.
 6. **Never hand-edit `/docs/diagrams/generated/`.** Change the catalogue and regenerate.
+7. **Read, never run.** Do not install dependencies, build, boot or test any repository you
+   are analysing, and do not execute anything from it. Establish routes, configuration and
+   call sites by reading the source.
+8. **Public sources first.** Private deployment-configuration repositories may be read,
+   read-only, only to settle an existing open question that depends on deployed values.
+   Record variable names and yes/no or set/unset facts only; never values, non-public
+   hostnames, account identifiers or deployment topology (releases, instance counts, sizing).
+   Tag each such statement with the exact phrase `per CDP environment configuration`. If in
+   doubt, leave it out and raise an open question.
+9. **Pin the analysis point.** Record each repository's HEAD SHA at the start of the cycle and
+   analyse exactly that commit. Commits that land later belong to the next cycle.
 
 ## Evidence standard
 
@@ -55,16 +66,23 @@ GITHUB_TOKEN=$(gh auth token) python3 scripts/update_aqie_repository_metadata.py
 ```
 
 This rewrites the repository catalog and inventory. New repositories appear automatically;
-add them to `SERVICE_OVERRIDES` in the script if the inferred domain or type is wrong.
+add them to `SERVICE_OVERRIDES` in the script if the inferred domain or type is wrong. The
+script keeps each repository's analysed commit and time by reading them from the metadata
+table of its service profile, and prints the repositories whose default-branch HEAD differs
+from that commit.
 
 ### 2. Identify changed repositories
 
-For each entry, compare current `origin/main` HEAD with `last_analysed_main_commit`.
-No delta means no work for that repository this cycle.
+Use the lists printed in step 1: repositories with new commits on the default branch, and
+repositories with no profile. No delta means no analysis for that repository this cycle, but
+recompute `Activity status` in every profile against the cycle date, and check whether any
+repository has been archived or has changed visibility. Related repositories with other names
+are not discovered automatically (see `oq-033`).
 
 ### 3. Analyse each changed repository
 
-Clone shallow into a scratch directory outside the workspace. For each repository, establish:
+Clone into a scratch directory outside the workspace (a partial clone is enough). Check out
+the pinned SHA. For each repository, establish:
 
 - HTTP routes or endpoints exposed
 - Outbound calls and external systems, with file and line evidence
@@ -77,6 +95,14 @@ Clone shallow into a scratch directory outside the workspace. For each repositor
 
 Add, amend or refute edges in `/docs/integration-catalog.yaml` **before** touching prose.
 Everything downstream derives from it.
+
+Two conventions keep the file and the generated output intact:
+
+- The catalogue uses CRLF line endings. Edit it with a tool that preserves them and makes
+  targeted replacements, never with a script that rewrites the whole file.
+- Do not put a pipe character in an endpoint `path`. The diagram generator copies paths into
+  Markdown tables and Mermaid labels, where a pipe splits the cell. Use a placeholder such as
+  `{type}` and name the allowed values in `data`.
 
 ### 5. Update the service profile
 
@@ -94,7 +120,9 @@ Reflect new services, changed dependencies and any new structural issues.
 python3 scripts/generate_diagrams.py
 ```
 
-Update the journey definitions inside the script if a user journey has changed shape.
+Update the journey definitions inside the script if a user journey has changed shape. Then
+read the regenerated tables and edge labels: a stray pipe in an endpoint path, or a `#` or a
+semicolon in a Mermaid sequence message, breaks rendering.
 
 ### 8. Record the cycle
 

@@ -13,12 +13,12 @@
 | Service type | `Auxilary Frontend` |
 | Lifecycle stage | `Beta` |
 | Primary language | JavaScript |
-| Runtime | Node.js `>=24` (ES modules) |
+| Runtime | Node.js `>=24` (ES modules); container parent image is Node 24.22.1 while `.nvmrc` still says `v24.14.1` |
 | Default branch | `main` |
 | Created (UTC) | `2026-05-21` |
-| Last main commit (UTC) | `2026-07-23T14:40:22Z` |
-| Last analysed commit | `a63de218` |
-| Last analysed (UTC) | `2026-09-15T00:00:00Z` |
+| Last main commit (UTC) | `2026-10-26T16:49:06Z` |
+| Last analysed commit | `ad0ec2f6` |
+| Last analysed (UTC) | `2026-11-19T00:00:00Z` |
 | Activity status | `Active` |
 
 ## 2. Purpose and Responsibilities
@@ -50,6 +50,9 @@
 - Provide historic ambient monitoring extracts — that is `aqie-dataselector-frontend`.
 - Provide any admin, upload or data-maintenance function. The journey is read-only and
   unauthenticated.
+- Accept PRTR submissions. The `aqie-prtr-submissions-frontend` and `aqie-prtr-submissions-backend`
+  repositories created in October 2026 are unconnected scaffolds. This site neither links to
+  them nor calls them, and they do not replace it.
 
 ## 3. Architecture
 
@@ -60,7 +63,7 @@ typed API client layer over `aqie-prtr-backend`. Each route is a folder containi
 
 | Component | Path | Responsibility |
 |---|---|---|
-| Router | `src/server/router.js` | Registers every route plugin and static file serving |
+| Router | `src/server/plugins/router.js` | Registers every route plugin and static file serving |
 | Search entry | `src/server/routes/search-facility/` | Chooses which search method to use; stores a selection error in session |
 | Name search | `src/server/routes/search-by-name/` | Facility name search form and results |
 | Location search | `src/server/routes/find-industrial-sites-by-location/` | Free-text place search, with a `searchagain` variant |
@@ -74,8 +77,9 @@ typed API client layer over `aqie-prtr-backend`. Each route is a folder containi
 | Competent authority | `src/server/routes/competent-authority/` | Regulator name and contacts |
 | Download | `src/server/routes/download/` | Year chooser plus a temporary server-side file proxy |
 | API client | `src/server/common/api/` | One module per backend resource over a shared `fetchJson` helper |
-| Resilience helper | `src/server/common/helpers/fetch-with-retry.js` | Timeout and retry around backend calls |
-| Session cache | `src/server/common/helpers/redis-client.js` | `catbox-redis` in deployed environments, `catbox-memory` locally |
+| Resilience helper | `src/server/common/helpers/fetch-with-retry.js` | Timeout (10 seconds by default) and optional retry around backend calls; callers set no retries, so there are none |
+| Language | `src/server/common/helpers/resolve-language.js`, each route's `content.js` | `?lang=en` or `?lang=cy` selects the page copy; the Welsh strings are placeholders |
+| Session cache | `src/server/plugins/session-cache.js`, `src/server/common/helpers/session-cache/cache-engine.js`, `src/server/common/helpers/redis-client.js` | `yar` sessions on `catbox-redis` in deployed environments, `catbox-memory` locally |
 | Config | `src/config/config.js` | `convict` schema |
 
 `src/server/common/api/api-common.js` centralises base-URL normalisation, the `Accept`
@@ -85,9 +89,11 @@ identifiers.
 
 ## 4. API Surface
 
-Routes are user-facing HTML pages unless noted. `{language?}` accepts `en` or `cy` only and
-is rejected at route validation otherwise — the Welsh content route exists but content
-coverage should be confirmed with the owner.
+Routes are user-facing HTML pages unless noted. `{language?}` on the start and download pages
+accepts `en` or `cy` only and is rejected at route validation otherwise. Other pages select the
+language with a `?lang=en` or `?lang=cy` query parameter. Every Welsh (`cy`) string in all 16 page
+content modules is a placeholder, the English text with ` --CY` appended, so there is no real Welsh
+translation yet.
 
 | Method | Path | Purpose |
 |---|---|---|
@@ -109,7 +115,7 @@ coverage should be confirmed with the owner.
 | `GET` | `/facility/{id}/{year}/lines/{lineId}` | One release, transfer or waste line |
 | `GET` | `/facility/{id}/details` | Facility reference detail |
 | `GET` | `/facility/{id}/competent-authority` | Competent authority and contacts |
-| `GET` | `/download-all-data-for-a-year/{language?}` | Choose a dataset year to download |
+| `GET` | `/download-all-data-for-a-year/{language?}` | Choose a dataset year to download (only years the backend flags `reportIsLive`, newest first) |
 | `GET` | `/download-all-data-for-a-year/file/{year}` | Streams the dataset file (four-digit year enforced) |
 | `GET` | `/problem-with-service` | Error page, optionally carrying a `statusCode` |
 | `GET` | `/favicon.ico`, `/public/{param*}` | Static assets |
@@ -118,11 +124,12 @@ coverage should be confirmed with the owner.
 
 `/download-all-data-for-a-year/file/{year}` is explicitly marked temporary in the code. It
 asks `aqie-prtr-backend` for a pre-signed link, validates that the returned URL parses and
-uses `https:`, fetches it server-side, and streams the body back with
-`Content-Disposition: attachment` and `Cache-Control: no-store`, naming the file
-`uk_prtr_dataset_<year>.xml`. The stated intent is to drop this proxy and link straight to
-the pre-signed URL once the backend sets the disposition header itself. Any failure
-redirects to `/problem-with-service?statusCode=502`.
+uses `https:`, fetches it server-side with a plain `fetch` (no allow-list on the host and no
+timeout), and streams the body back with `Content-Disposition: attachment` and
+`Cache-Control: no-store`, naming the file `uk_prtr_dataset_<year>.xml`. The URL is never taken from
+the citizen: it comes only from the backend response, and the year must be four digits. The stated
+intent is to drop this proxy and link straight to the pre-signed URL once the backend sets the
+disposition header itself. Any failure redirects to `/problem-with-service?statusCode=502`.
 
 ## 5. Consumes (Outbound Dependencies)
 
@@ -149,11 +156,12 @@ templates and content, not runtime calls.
 |---|---|---|
 | Public internet (citizens) | All HTML routes above | Search criteria in; facility and release information out |
 | `aqie-prtr-journey-tests` | Public journey routes | End-to-end browser assertions |
-| `aqie-prtr-perftest` | Public journey routes | Load test traffic |
+
+`aqie-prtr-perftest` is an unconfigured template (see its profile) and sends no traffic to this service yet.
 
 > Edges are mastered in [`/docs/integration-catalog.yaml`](../../../integration-catalog.yaml).
-> The catalogue lists four of the nine backend endpoints this service calls, and does not
-> record the pre-signed S3 fetch — see Section 11.
+> The catalogue lists all nine backend endpoints this service calls and the pre-signed S3 fetch.
+> Redis is recorded as a datastore, not an edge. No other AQIE service calls this one.
 
 ## 7. Data
 
@@ -180,9 +188,9 @@ Variable names only — values are held in CDP secrets and never recorded here.
 | `ASSET_PATH`, `STATIC_CACHE_TIMEOUT` | Static asset serving |
 | `REDIS_HOST`, `REDIS_USERNAME`, `REDIS_PASSWORD`, `REDIS_KEY_PREFIX`, `REDIS_TLS`, `USE_SINGLE_INSTANCE_CACHE` | Session cache backend |
 | `SESSION_CACHE_ENGINE`, `SESSION_CACHE_NAME`, `SESSION_CACHE_TTL` | Catbox cache selection and lifetime |
-| `SESSION_COOKIE_PASSWORD`, `SESSION_COOKIE_SECURE`, `SESSION_COOKIE_TTL` | Session cookie signing and lifetime |
+| `SESSION_COOKIE_PASSWORD`, `SESSION_COOKIE_SECURE`, `SESSION_COOKIE_TTL` | Session cookie signing and lifetime. The password has a committed placeholder default, so confirm the variable is set in CDP |
 | `HTTP_PROXY` | CDP egress proxy |
-| `ENABLE_SECURE_CONTEXT` | TLS trust store |
+| `ENABLE_SECURE_CONTEXT` | Declared in config but not read by service code |
 | `TRACING_HEADER` | CDP trace header name |
 | `LOG_ENABLED`, `LOG_LEVEL`, `LOG_FORMAT`, `LOG_REDACT` | Logging |
 
@@ -190,14 +198,15 @@ Variable names only — values are held in CDP secrets and never recorded here.
 
 - **Platform:** DEFRA Core Delivery Platform (CDP) on AWS ECS.
 - **Container:** multi-stage build from `defradigital/node-development` through a
-  `development` stage to `defradigital/node`; entrypoint `node src`. `prestart` runs the
-  Vite frontend build.
-- **Environments:** CDP `dev`, `test`, `perf-test`, `prod`.
+  `development` stage to `defradigital/node`, parent image `3.2.4-node24.22.1`; entrypoint
+  `node src`. `prestart` runs the Vite frontend build.
+- **Environments:** CDP `dev`, `test`, `perf-test`, `prod`. The repository does not show which are
+  actually deployed.
 - **Local development:** `compose.yml` provides Redis, MongoDB (unused) and a `floci`
   container.
 - **Pipelines:**
-  - `.github/workflows/check-pull-request.yml` — lint (ESLint and Stylelint), test and
-    SonarQube scan on PR
+  - `.github/workflows/check-pull-request.yml` — security audit, Vite build, format check, lint
+    (ESLint and Stylelint), tests, a Docker build test and a Sonar scan (skipped for Dependabot) on PR
   - `.github/workflows/publish.yml` — build and publish on push
   - `.github/workflows/publish-hotfix.yml` — manual hotfix publish
 - **Testing:** `vitest` with coverage and `cheerio` for rendered-markup assertions.
@@ -209,22 +218,27 @@ Variable names only — values are held in CDP secrets and never recorded here.
   and truncates upstream error bodies to 200 characters.
 - **Tracing:** `@defra/hapi-tracing` using `TRACING_HEADER`.
 - **Metrics:** `@defra/cdp-metrics`.
-- **Auditing:** `@defra/cdp-auditing`.
+- **Auditing:** `@defra/cdp-auditing` is declared but never imported, so no audit events are
+  emitted.
 - **Security headers:** `blankie` with `@hapi/scooter` for Content Security Policy.
 - **Shutdown:** `hapi-pulse`.
 
 ## 11. Open Questions
 
-- [ ] Welsh language: the start page and download page accept a `cy` parameter. Confirm
-      whether Welsh content is complete across the journey or whether the routes are
-      placeholders.
+- [ ] Welsh language: every Welsh string in the page content modules is a placeholder (the English
+      text with ` --CY` appended). Confirm whether real Welsh content is planned before the service
+      is promoted, and whether the `cy` routes should be hidden until then.
 - [ ] The dataset download proxy is marked temporary pending the backend setting
       `Content-Disposition`. Confirm whether that backend change is planned, and whether the
       proxy should then be removed.
-- [ ] The proxy validates only that the pre-signed URL parses and is HTTPS; it does not
-      constrain the host. Confirm whether an S3 host allow-list should be added as
-      defence in depth (see Section 11 of the backend profile for the issuing side).
+- [ ] The proxy validates only that the pre-signed URL parses and is HTTPS, and fetches it with
+      no timeout; it does not constrain the host. The URL comes only from the backend response.
+      Confirm whether an S3 host allow-list and a timeout should be added as defence in depth
+      (see Section 11 of the backend profile for the issuing side).
 - [ ] `compose.yml` provisions MongoDB that the service does not use. Confirm it can be
       dropped from the template.
-- [ ] The catalogue edge `prtr-frontend__prtr-backend` is incomplete — see Section 6.
 - [ ] Confirm the intended production `BACKEND_URL`; the config default is `http://localhost:3001`.
+- [ ] `SESSION_COOKIE_PASSWORD` has a committed placeholder default in `src/config/config.js`.
+      Confirm the variable is set in every deployed environment.
+- [ ] How will this public register relate to the PRTR submissions services? They are unconnected
+      scaffolds today and neither site links to the other.

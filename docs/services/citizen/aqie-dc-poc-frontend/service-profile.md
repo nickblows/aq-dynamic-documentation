@@ -11,7 +11,7 @@
 | Repository | [`DEFRA/aqie-dc-poc-frontend`](https://github.com/DEFRA/aqie-dc-poc-frontend) |
 | Service domain | `Citizen` |
 | Service type | `Prototype Service (including PoC)` |
-| Lifecycle stage | `Prototype/PoC` |
+| Lifecycle stage | `Archived` |
 | Primary language | JavaScript |
 | Runtime | Node.js `>=24` (ES modules), pinned to `v24.14.1` in `.nvmrc` |
 | Default branch | `main` |
@@ -19,9 +19,12 @@
 | Last main commit (UTC) | `2026-05-14T09:32:58Z` |
 | Last analysed commit | `38e62e1f` |
 | Last analysed (UTC) | `2026-09-15T00:00:00Z` |
-| Activity status | `Monitoring` |
+| Activity status | `Archived` |
 
 ## 2. Purpose and Responsibilities
+
+> **Archived.** Archived on GitHub since the previous analysis (first observed 2026-11-17).
+> There have been no commits to `main` since 2026-05-14. Retained for reference. Do not deploy.
 
 **Does:**
 
@@ -144,8 +147,8 @@ Environment variable names only — never values.
 - [ ] Confirm the intended relationship with `aqie-dc-frontend` and `aqie-dc-admin-frontend`.
       This repository was created after both and contains no domain code, so "proof of concept"
       may not describe what it actually is.
-- [ ] Is this repository still needed? If it was a scaffold that was never taken forward, it
-      should be archived so it stops appearing as an active DC service.
+- [x] Is this repository still needed? Answered by the owners: it has been archived on
+      GitHub, so it no longer appears as an active DC service.
 - [ ] Confirm whether it has ever been deployed to a CDP environment, and whether any Redis
       instance provisioned for it can be released.
 - [ ] Confirm that its Redis key prefix could not collide with the live frontends' session

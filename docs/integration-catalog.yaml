@@ -12,9 +12,12 @@
 # Security policy:
 #   Record authentication MECHANISM and credential VARIABLE NAMES only.
 #   Never record credential values, tokens, keys or endpoints containing secrets.
+#   A statement taken from private deployment configuration (not from a default branch)
+#   is limited to variable names and set, unset or true/false states, and is tagged
+#   "per CDP environment configuration".
 
 catalog_version: 1
-updated_at_utc: "2026-09-15T00:00:00Z"
+updated_at_utc: "2026-11-19T00:00:00Z"
 analysis_branch_policy: "main-only"
 
 confidence_levels:
@@ -42,12 +45,16 @@ external_systems:
       - "uk-air-api.staging.rcdo.co.uk"
       - "api-ukair.defra.gov.uk"
     auth: "Login endpoint exchanges credentials for a bearer token"
-    credential_vars: ["RICARDO_API_EMAIL", "RICARDO_API_PASSWORD", "RICARDO_API_KEY"]
+    credential_vars: ["RICARDO_API_EMAIL", "RICARDO_API_PASSWORD", "RICARDO_API_KEY", "RICARDO_API_VALUE"]
 
   - id: ukair-website
     name: "DEFRA UK-AIR public website"
     owner: "DEFRA"
-    description: "Public UK-AIR site providing the national forecast text summary."
+    description: >-
+      Public UK-AIR site. aqie-back-end reads its forecast RSS feed
+      (/assets/rss/forecast.xml) on a schedule. No AQIE service fetches the national
+      forecast text summary page; the setting in aqie-front-end for it is unused (see the
+      refuted edge).
     hosts: ["uk-air.defra.gov.uk"]
     auth: "None (public endpoint)"
 
@@ -65,13 +72,15 @@ external_systems:
     owner: "Ordnance Survey"
     description: "Place-name and gazetteer search used to resolve user location input."
     hosts: ["api.os.uk"]
-    auth: "API key"
+    auth: "API key (aqie-front-end sends it as a query-string parameter)"
     credential_vars: ["OS_NAMES_API_KEY", "OSPLACE_API_KEY"]
 
   - id: postcodes-io
     name: "postcodes.io"
     owner: "Ideal Postcodes (open service)"
-    description: "Reverse geocoding of coordinates to postcode and local authority."
+    description: >-
+      Postcode, outcode and place-name geocoding (aqie-demo-data-visualisations) and
+      reverse geocoding of coordinates to postcode and local authority (aqie-back-end).
     hosts: ["api.postcodes.io"]
     auth: "None (public endpoint)"
 
@@ -85,8 +94,11 @@ external_systems:
 
   - id: met-office-sftp
     name: "Met Office forecast SFTP"
-    owner: "Met Office"
-    description: "Scheduled drop of air quality forecast files collected over SFTP."
+    owner: "Met Office (files); hosting service operator to be confirmed"
+    description: >-
+      Drop of air quality forecast files collected over SFTP. aqie-forecast-api collects
+      it on a schedule. aqie-back-end reads it on request through an HTTP CONNECT tunnel
+      on the CDP proxy; its host, account and directory are hard-coded in source.
     protocol: "SFTP"
     auth: "SSH private key"
     credential_vars: ["SSH_PRIVATE_KEY", "MET_OFFICE_DIRECTORY"]
@@ -94,14 +106,21 @@ external_systems:
   - id: azure-entra
     name: "Microsoft Entra ID"
     owner: "DEFRA IT"
-    description: "Staff authentication for internal admin interfaces."
+    description: >-
+      Identity provider used for staff sign-in to the smoke control caseworker interface
+      (authorisation code flow) and for a client-credentials token that
+      aqie-front-end uses to call the Northern Ireland OS Places lookup.
     hosts: ["login.microsoftonline.com"]
-    auth: "OpenID Connect / MSAL"
+    auth: "OpenID Connect / MSAL (staff sign-in); OAuth2 client credentials (token for the NI lookup)"
+    credential_vars: ["AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET", "OS_PLACES_POSTCODE_NORTHERN_IRELAND_CLIENT_ID", "OS_PLACES_POSTCODE_NORTHERN_IRELAND_CLIENT_SECRET", "OS_PLACES_POSTCODE_NORTHERN_IRELAND_CLIENT_SCOPE", "OAUTH_TOKEN_NORTHERN_IRELAND_API_TENANT_ID"]
 
   - id: qualtrics
     name: "Qualtrics"
     owner: "DEFRA (survey tenant)"
-    description: "User feedback survey linked from citizen-facing pages."
+    description: >-
+      User feedback and research sign-up surveys linked from citizen-facing pages: the
+      alert success pages in aqie-front-end and the beta banner in
+      aqie-dataselector-frontend.
     hosts: ["defragroup.eu.qualtrics.com"]
     auth: "None (outbound link only)"
 
@@ -123,23 +142,28 @@ external_systems:
       data, declared air quality management areas and annual status report data.
     hosts: ["www.laqmportal.co.uk"]
     auth: "X-API-Key and X-API-PartnerId headers"
-    credential_vars: ["LAQM_API_KEY", "LAQMAPIKEY", "LAQMAPIPARTNERID"]
+    credential_vars: ["LAQM_API_KEY", "LAQM_USERID", "LAQMAPIKEY", "LAQMAPIPARTNERID"]
 
   - id: defra-sos
     name: "DEFRA Sensor Observation Service (SOS)"
     owner: "DEFRA"
     description: >-
       Public OGC Sensor Observation Service exposing historic hourly air quality
-      observations for UK monitoring sites.
-    hosts: ["uk-air.defra.gov.uk/sos-ukair"]
+      observations for UK monitoring sites, plus the public site and feature-of-interest
+      listing API (/data/API/site-process-featureofinterest-by-region) that aqie-back-end
+      sweeps hourly.
+    hosts: ["uk-air.defra.gov.uk/sos-ukair", "uk-air.defra.gov.uk/data/API"]
     auth: "None (public endpoint)"
 
   - id: os-places-ni
     name: "Ordnance Survey Places (Northern Ireland)"
     owner: "Ordnance Survey"
-    description: "Northern Ireland postcode and address lookup, authenticated via Entra ID."
-    hosts: ["api.os.uk"]
+    description: "Northern Ireland postcode lookup, authenticated with an Entra ID client-credentials token."
+    # hosts: not visible in source. aqie-front-end reads the URL from
+    # OS_PLACES_POSTCODE_NORTHERN_IRELAND_URL, which has no default; the earlier entry of
+    # api.os.uk was unverified and has been removed.
     auth: "OAuth2 bearer token obtained from Microsoft Entra ID"
+    credential_vars: ["OS_PLACES_POSTCODE_NORTHERN_IRELAND_CLIENT_ID", "OS_PLACES_POSTCODE_NORTHERN_IRELAND_CLIENT_SECRET", "OS_PLACES_POSTCODE_NORTHERN_IRELAND_CLIENT_SCOPE", "OAUTH_TOKEN_NORTHERN_IRELAND_API_TENANT_ID"]
 
   - id: openfreemap
     name: "OpenFreeMap"
@@ -152,8 +176,15 @@ external_systems:
     name: "Google Tag Manager / Google Analytics"
     owner: "DEFRA analytics tenant"
     description: "Browser-side usage analytics, loaded only after cookie consent."
-    hosts: ["googletagmanager.com"]
+    hosts: ["googletagmanager.com", "google-analytics.com", "analytics.google.com"]
     auth: "None (measurement ID)"
+
+  - id: jquery-cdn
+    name: "jQuery CDN"
+    owner: "jQuery project (OpenJS Foundation)"
+    description: "Public content delivery network that serves the jQuery library to the citizen's browser."
+    hosts: ["code.jquery.com"]
+    auth: "None (public endpoint). The script tag carries a subresource integrity hash"
 
   - id: defra-forms
     name: "DEFRA Forms"
@@ -186,20 +217,35 @@ integrations:
     protocol: HTTPS/REST
     direction: outbound
     interaction: synchronous
-    purpose: "Retrieve pollutant measurements and monitoring station detail for the location the citizen searched."
+    purpose: "Retrieve live pollutant measurements and monitoring station detail for the location the citizen searched."
     endpoints:
       - method: GET
-        path: /measurements
-        data: "Per-station pollutant concentrations and DAQI bands"
-      - method: GET
         path: /monitoringStationInfo
-        data: "Monitoring station metadata, coordinates, pollutants measured"
+        data: "Searched coordinates, distance and station-count limits in; live per-station pollutant concentrations, station metadata and coordinates out"
     auth: "CDP internal network; no application-level auth observed"
     confidence: confirmed
+    notes: >-
+      Every runtime request uses NEW_RICARDO_MEASUREMENTS_API_URL. The English controller
+      hard-codes the new source and the shared fetch forces it for any non-boolean
+      argument, so the legacy /measurements URL (MEASUREMENTS_API_URL) is read only by a
+      branch that no runtime caller can reach. USE_NEW_RICARDO_MEASUREMENTS_ENABLED
+      (default true; true in every environment per CDP environment configuration) only
+      selects the response parser in the Welsh controller. The former /measurements edge
+      was removed when aqie-back-end PR #163 decommissioned that endpoint. Checked at
+      aqie-front-end 210c0c03. See oq-016.
     evidence:
       - repo: aqie-front-end
+        file: src/server/locations/helpers/get-nearest-location.js
+        lines: "260-322"
+      - repo: aqie-front-end
+        file: src/server/locations/helpers/fetch-data.js
+        lines: "152-171,218-254"
+      - repo: aqie-front-end
+        file: src/server/locations/helpers/extracted/api-utils.js
+        lines: "239-257,331-369,425-439"
+      - repo: aqie-front-end
         file: src/config/index.js
-        lines: "412,418"
+        lines: "415-420"
 
   - id: front-end__forecast-api
     source: aqie-front-end
@@ -208,17 +254,27 @@ integrations:
     protocol: HTTPS/REST
     direction: outbound
     interaction: synchronous
-    purpose: "Retrieve the multi-day air quality forecast shown on location pages."
+    purpose: "Retrieve the multi-day air quality forecast, and the daily forecast summary text, shown on location pages."
     endpoints:
       - method: GET
         path: /forecast
-        data: "Forecast DAQI values by day and region"
-    auth: "CDP internal network"
+        data: "Forecast DAQI values by day and region, plus the forecast-summary narrative"
+    auth: "CDP internal network; x-api-key (CDP_X_API_KEY family) only when a localhost request is routed through the protected gateway"
     confidence: confirmed
+    notes: >-
+      The national forecast narrative on location pages is the forecast-summary field of
+      this response. The front end has no call site for the UK-AIR website summary (see
+      refuted edge aqie-front-end -> UK-AIR website).
     evidence:
       - repo: aqie-front-end
+        file: src/server/locations/helpers/extracted/api-utils.js
+        lines: "13-32,71-129,204-237"
+      - repo: aqie-front-end
+        file: src/server/locations/helpers/fetch-data.js
+        lines: "108-150,453-482"
+      - repo: aqie-front-end
         file: src/config/index.js
-        lines: "360"
+        lines: "357-362"
 
   - id: front-end__os-names
     source: aqie-front-end
@@ -227,36 +283,26 @@ integrations:
     protocol: HTTPS/REST
     direction: outbound
     interaction: synchronous
-    purpose: "Resolve free-text place names entered by citizens into coordinates."
+    purpose: "Resolve free-text place names and postcodes entered by citizens into coordinates."
     endpoints:
       - method: GET
         path: /search/names/v1/find
-        data: "Query string in; gazetteer matches with coordinates out"
-    auth: "API key"
+        data: "Query, local-type filter and API key in the query string; gazetteer matches with coordinates out"
+    auth: "API key carried as a query-string parameter (OS_NAMES_API_KEY)"
     confidence: confirmed
+    notes: >-
+      The shared proxy fetch helper logs the full request URL at info level, so the key is
+      written to application logs on every lookup (finding 73).
     evidence:
       - repo: aqie-front-end
-        file: src/config/index.js
-        lines: "258"
-
-  - id: front-end__ukair-website
-    source: aqie-front-end
-    target: ukair-website
-    target_kind: external
-    protocol: HTTPS
-    direction: outbound
-    interaction: synchronous
-    purpose: "Fetch the national forecast text summary published by UK-AIR."
-    endpoints:
-      - method: GET
-        path: /ajax/forecast_text_summary.php
-        data: "HTML/text forecast narrative"
-    auth: "None"
-    confidence: confirmed
-    evidence:
+        file: src/server/locations/helpers/get-os-places.js
+        lines: "75-117"
+      - repo: aqie-front-end
+        file: src/server/common/helpers/catch-proxy-fetch-error.js
+        lines: "10-16,35-41,43-72"
       - repo: aqie-front-end
         file: src/config/index.js
-        lines: "424"
+        lines: "248-260"
 
   - id: front-end__qualtrics
     source: aqie-front-end
@@ -265,14 +311,23 @@ integrations:
     protocol: HTTPS
     direction: outbound
     interaction: user-redirect
-    purpose: "Link citizens to the feedback survey."
+    purpose: "Link citizens to the user research sign-up form from the alert success pages."
     data_exchanged: "No service data; user follows an outbound link"
     auth: "None"
     confidence: confirmed
     evidence:
       - repo: aqie-front-end
+        file: src/server/notify/register/sms-success/controller.js
+        lines: "122"
+      - repo: aqie-front-end
+        file: src/server/notify/register/alerts-success/controller.js
+        lines: "119"
+      - repo: aqie-front-end
+        file: src/server/notify/register/alerts-success/index.njk
+        lines: "32"
+      - repo: aqie-front-end
         file: src/config/index.js
-        lines: "245"
+        lines: "242-247"
 
   # --- Core data acquisition ------------------------------------------------
   - id: back-end__ricardo
@@ -282,29 +337,95 @@ integrations:
     protocol: HTTPS/REST
     direction: outbound
     interaction: scheduled-batch
-    purpose: "Ingest monitoring station metadata and pollutant measurements into MongoDB on a cron schedule."
+    purpose: "Refresh the monitoring station cache (every 6 hours and at start-up) and recalculate per-station DAQI from measurements (every 30 minutes)."
     endpoints:
       - method: POST
         path: /api/login_check
-        data: "Credentials exchanged for bearer token"
-      - method: GET
-        path: /api/pollutant_measurement_datas
-        data: "Time-series pollutant concentrations per station"
-      - method: GET
-        path: /api/pollutant_metadatas
-        data: "Pollutant definitions, units, thresholds"
+        data: "Credentials exchanged for bearer token, once per job run"
       - method: GET
         path: /api/site_meta_datas
-        data: "Monitoring site metadata"
-    schedule_vars: ["AURN_SCHEDULE", "POLLUTANTS_SCHEDULE", "MONITORING_STATIONS_SCHEDULE"]
+        data: "Monitoring site metadata including closed sites (with-closed=true)"
+      - method: GET
+        path: /api/pollutant_metadatas
+        data: "Per-station pollutant instrument records (start and end dates, status), paged, used to derive open and close dates and current pollutant coverage"
+      - method: GET
+        path: /api/pollutant_measurement_datas
+        data: "Hourly and 15-minute pollutant readings per station for yesterday and today, paged, five stations at a time"
+    schedule_vars: ["AURN_SCHEDULE", "MONITORING_STATIONS_SCHEDULE"]
     auth: "Username/password login exchanged for bearer token"
     confidence: confirmed
+    notes: >-
+      Code defaults for all four Ricardo URLs point at the supplier's staging host; see
+      oq-012. Station cache population also runs once on the hapi start event (no lock
+      taken). The pollutant_metadatas page fetch uses plain fetch rather than the proxy
+      helper. POLLUTANTS_SCHEDULE is not a Ricardo schedule: it drives the UK-AIR SOS
+      pipeline (back-end__defra-sos).
     evidence:
       - repo: aqie-back-end
         file: src/config/index.js
-        lines: "Ricardo URL block"
+        lines: "223-234,266-303"
+      - repo: aqie-back-end
+        file: src/api/locationsite/helpers/oauth-helpers.js
+        lines: "5-50"
       - repo: aqie-back-end
         file: src/api/aurn/fetch-aurn-measurements.js
+        lines: "255-258,284,293"
+      - repo: aqie-back-end
+        file: src/api/aurn/aurn-scheduler.js
+        lines: "14-16"
+      - repo: aqie-back-end
+        file: src/api/locationsite/fetch-monitoring-stations.js
+        lines: "35-58,69-71"
+      - repo: aqie-back-end
+        file: src/api/locationsite/helpers/fetch-station-dates.js
+        lines: "79,227"
+      - repo: aqie-back-end
+        file: src/api/locationsite/monitoring-stations-scheduler.js
+        lines: "17-19"
+      - repo: aqie-back-end
+        file: src/api/locationsite/db/populate-db.js
+        lines: "12-16"
+
+  - id: back-end__ricardo-live
+    source: aqie-back-end
+    target: ricardo-ukair
+    target_kind: external
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: "Serve /monitoringStationInfo (current readings, 1 + 5N upstream calls) and /monitoringStationHistory (hourly series, 5 upstream calls per uncached request) by calling Ricardo on every request."
+    endpoints:
+      - method: POST
+        path: /api/login_check
+        data: "Credentials exchanged for bearer token when the caller's session has none"
+      - method: GET
+        path: /api/site_meta_datas
+        data: "Station list for /monitoringStationInfo (allow-listed query parameters only)"
+      - method: GET
+        path: /api/pollutant_measurement_datas
+        data: "One call per pollutant per station (info) or per pollutant for one station (history, with pollutant-name, start-date, end-date)"
+    auth: "Username/password login exchanged for bearer token, cached in the caller's yar session"
+    confidence: confirmed
+    notes: >-
+      No back-end timeout, no retries. /monitoringStationHistory caches successful
+      responses in process for 15 minutes (500 entries); /monitoringStationInfo does not
+      cache. See oq-031 on the request-time load.
+    evidence:
+      - repo: aqie-back-end
+        file: src/api/locationsite/controller.js
+        lines: "16-48"
+      - repo: aqie-back-end
+        file: src/api/locationsite/helpers/fetch-ricardo-data-all.js
+        lines: "44-60"
+      - repo: aqie-back-end
+        file: src/api/locationsite/helpers/pollutant-helpers.js
+        lines: "406-421"
+      - repo: aqie-back-end
+        file: src/api/locationsite/history-controller.js
+        lines: "69-95"
+      - repo: aqie-back-end
+        file: src/api/locationsite/helpers/fetch-pollutant-history.js
+        lines: "91-99,126-132,164-171"
 
   - id: back-end__postcodes-io
     source: aqie-back-end
@@ -312,17 +433,22 @@ integrations:
     target_kind: external
     protocol: HTTPS/REST
     direction: outbound
-    interaction: synchronous
-    purpose: "Resolve station coordinates to the owning local authority."
+    interaction: scheduled-batch
+    purpose: "Resolve each station's coordinates to the owning local authority during the station cache refresh."
     endpoints:
       - method: GET
         path: /postcodes
-        data: "lat/lon and radius in; postcode and local authority out"
+        data: "lon, lat, radius=2000 and wideSearch in; admin_district of the first result out (5 second timeout, null on failure)"
     auth: "None"
     confidence: confirmed
+    notes: "One concurrent lookup per station, via the CDP egress proxy helper since PR #166."
     evidence:
       - repo: aqie-back-end
         file: src/api/locationsite/helpers/get-local-authority.js
+        lines: "8-30"
+      - repo: aqie-back-end
+        file: src/api/locationsite/fetch-monitoring-stations.js
+        lines: "86-88"
 
   - id: back-end__met-office
     source: aqie-back-end
@@ -330,31 +456,99 @@ integrations:
     target_kind: external
     protocol: SFTP
     direction: inbound-pull
-    interaction: scheduled-batch
-    purpose: "Collect Met Office air quality forecast files and expose them via the SFTP API routes."
-    data_exchanged: "Forecast data files retrieved from a configured remote directory"
-    schedule_vars: ["FORECAST_SCHEDULE"]
-    auth: "SSH private key"
+    interaction: synchronous
+    purpose: "On request, list and read forecast files held in a share on a DEFRA-named SFTP service."
+    endpoints:
+      - method: GET
+        path: /sftp/files
+        data: "Directory listing (this service's own route)"
+      - method: GET
+        path: /sftp/file/{filename}
+        data: "One named file returned as XML (this service's own route)"
+    auth: "SSH private key (SSH_PRIVATE_KEY); host, port, account name and remote directory are hard-coded in source"
     confidence: confirmed
+    notes: >-
+      Not scheduled and not stored. FORECAST_SCHEDULE belongs to back-end__ukair-website.
+      The connection is an HTTP CONNECT tunnel through the CDP proxy (HTTP_PROXY). The
+      routes have no authentication and no consumer is recorded in this catalogue (see
+      security finding about the SFTP routes).
     evidence:
       - repo: aqie-back-end
         file: src/api/metOfficeForecast/index.js
+        lines: "10-14,23-29"
+      - repo: aqie-back-end
+        file: src/api/metOfficeForecast/controllers/connectSftpViaProxy.js
+        lines: "26-99"
+      - repo: aqie-back-end
+        file: src/api/metOfficeForecast/controllers/list-forecast.js
+        lines: "16-32"
+      - repo: aqie-back-end
+        file: src/api/metOfficeForecast/controllers/read-forecast.js
+        lines: "17-33,54-62"
 
-  - id: back-end__govuk-notify
+  - id: back-end__defra-sos
     source: aqie-back-end
-    target: govuk-notify
+    target: defra-sos
     target_kind: external
-    protocol: HTTPS/REST
+    protocol: HTTPS/REST and OGC SOS
     direction: outbound
-    interaction: synchronous
-    purpose: "Send notifications from the back-end service."
-    auth: "API key"
-    confidence: provisional
-    open_question: "Confirm whether notification sending is active here or fully delegated to aqie-notify-service."
+    interaction: scheduled-batch
+    purpose: "Hourly sweep of 16 regions: read each region's site and feature-of-interest listing, then one SOS GetObservation per pollutant per site. Results are written to measurements and historicalMeasurements, which nothing reads since PR #163."
+    endpoints:
+      - method: GET
+        path: /data/API/site-process-featureofinterest-by-region
+        data: "Region id in; sites with feature-of-interest ids per pollutant out"
+      - method: GET
+        path: /sos-ukair/service?service=AQD&version=1.0.0&request=GetObservation
+        data: "Temporal filter and feature of interest in; INSPIRE AQD XML observation out"
+    schedule_vars: ["POLLUTANTS_SCHEDULE"]
+    auth: "None (public endpoints)"
+    confidence: confirmed
+    notes: >-
+      URLs come from POLLUTANTS_URL and POLLUTANTS_URL_EXTRA. Cron only; there is no run
+      at start-up. Orphaned output since PR #163; see oq-019.
     evidence:
       - repo: aqie-back-end
-        file: src/config/index.js
-        lines: "NOTIFY_BASE_URL"
+        file: src/api/pollutants/helpers/get-api-pollutants.js
+        lines: "5-8"
+      - repo: aqie-back-end
+        file: src/api/pollutants/helpers/pollutants-updater.js
+        lines: "23,62-66"
+      - repo: aqie-back-end
+        file: src/api/pollutants/pollutants-scheduler.js
+        lines: "16-18"
+      - repo: aqie-back-end
+        file: src/api/server.js
+        lines: "83"
+
+  - id: back-end__ukair-website
+    source: aqie-back-end
+    target: ukair-website
+    target_kind: external
+    protocol: HTTPS
+    direction: outbound
+    interaction: scheduled-batch
+    purpose: "Fetch the UK-AIR forecast RSS feed and store parsed forecasts in forecasts and historicalForecasts, which nothing reads since PR #163."
+    endpoints:
+      - method: GET
+        path: /assets/rss/forecast.xml
+        data: "RSS items with location, publication date and a short per-day forecast"
+    schedule_vars: ["FORECAST_SCHEDULE"]
+    auth: "None (public endpoint)"
+    confidence: confirmed
+    notes: >-
+      URL from FORECAST_URL. Runs on the cron schedule (default 05:00 to 10:00 hourly)
+      and once on the hapi start event. Orphaned output since PR #163; see oq-019.
+    evidence:
+      - repo: aqie-back-end
+        file: src/api/forecast/fetch-forecast.js
+        lines: "9-19"
+      - repo: aqie-back-end
+        file: src/api/forecast/forecast-scheduler.js
+        lines: "17-25"
+      - repo: aqie-back-end
+        file: src/api/server.js
+        lines: "81"
 
   - id: forecast-api__met-office
     source: aqie-forecast-api
@@ -380,17 +574,29 @@ integrations:
     protocol: HTTPS/REST
     direction: outbound
     interaction: synchronous
-    purpose: "Back the /osnameplaces endpoint with Ordnance Survey gazetteer search."
+    purpose: "Back the POST /osnameplaces endpoint with Ordnance Survey gazetteer search."
     endpoints:
       - method: GET
         path: /search/names/v1/find
-        data: "Place-name query in; matched places with coordinates out"
+        data: "Place-name or postcode text (query), a place-type filter (fq) and the API key (key) as query parameters in; matched gazetteer entries with coordinates out"
     auth: "API key"
     confidence: confirmed
+    notes: >-
+      The key is a query parameter (credential variable OS_NAMES_API_KEY) and the complete
+      request URL, key included, is written to the application log (see the open questions
+      in the service profile). Calls leave through the CDP egress proxy. The call is
+      skipped, and an empty list returned, when the input contains any of the
+      characters % $ & # ! ¬ or a backtick. The call is also skipped for blank input.
     evidence:
       - repo: aqie-location-backend
+        file: src/api/getosname/helper/fetch-data.js
+        lines: "12-34"
+      - repo: aqie-location-backend
+        file: src/api/common/helpers/catch-proxy-fetch-error.js
+        lines: "11"
+      - repo: aqie-location-backend
         file: src/config/index.js
-        lines: "OS_NAMES_API_URL"
+        lines: "55-67"
 
   - id: monitoringstation-backend__back-end
     source: aqie-monitoringstation-backend
@@ -399,20 +605,40 @@ integrations:
     protocol: HTTPS/REST
     direction: outbound
     interaction: synchronous
-    purpose: "Enrich monitoring station responses with station metadata."
+    purpose: >-
+      Fetch the full Ricardo monitoring station dataset, including closed sites and
+      pollutant metadata, for the live radius search on every POST /monitoringstation
+      request, and for a scheduled refresh of the MongoDB stations cache that backs
+      GET /monitoringstation/by-location.
     endpoints:
       - method: GET
         path: "/monitoringStationInfo?with-closed=true&with-pollutants=1&stream=data"
         data: "Full station metadata including closed sites and pollutant coverage"
+    schedule_vars: ["STATIONS_SYNC_SCHEDULE"]
     auth: "CDP internal network"
     confidence: confirmed
     notes: >-
-      A /measurements variant exists only as a commented-out alternative default on the
-      analysed commit. The endpoint is supplied by the overridable RICARDO_API_URL
-      variable, so either could be in use at runtime — see oq-014.
+      The base URL is the overridable RICARDO_API_URL variable (code default
+      https://aqie-back-end.<ENVIRONMENT>.cdp-int.defra.cloud/monitoringStationInfo); the
+      query string is appended in code. The same URL is called from the live search and
+      from the stations cache refresh (once at start-up, then on STATIONS_SYNC_SCHEDULE,
+      default every six hours). A /measurements default survives only as a commented-out
+      line in src/config/index.js (the endpoint was removed by aqie-back-end PR #163).
+      RICARDO_API_URL is not set in any environment per CDP environment configuration, so
+      the default applies everywhere. A stale MEASUREMENTS_API_URL pointing at
+      /measurements is still set per CDP environment configuration, but the service has
+      not read it since 2026-03-16, so nothing live targets the removed endpoint. oq-014
+      answered.
     evidence:
       - repo: aqie-monitoringstation-backend
         file: src/config/index.js
+        lines: "114-119"
+      - repo: aqie-monitoringstation-backend
+        file: src/api/location/helpers/fetch-data.js
+        lines: "31-37,56-62"
+      - repo: aqie-monitoringstation-backend
+        file: src/api/location/ricardo-stations-scheduler.js
+        lines: "30,62-64"
 
   - id: monitoringstation-backend__location-backend
     source: aqie-monitoringstation-backend
@@ -425,12 +651,24 @@ integrations:
     endpoints:
       - method: POST
         path: /osnameplaces
-        data: "Location query in; gazetteer matches out"
+        data: "Location query (JSON body userLocation) in; gazetteer matches out"
     auth: "CDP internal network"
     confidence: confirmed
+    notes: >-
+      The URL is the overridable OSPlace_API_URL variable (code default
+      https://aqie-location-backend.<ENVIRONMENT>.cdp-int.defra.cloud/osnameplaces), set
+      explicitly in every environment per CDP environment configuration.
+      aqie-location-backend registers only POST /osnameplaces, so the method matches. In
+      perf-test the configured value still uses the retired GET-style path form rather than
+      the POST path, per CDP environment configuration, so searches there are expected to
+      fail (read, not run). oq-009 answered.
     evidence:
       - repo: aqie-monitoringstation-backend
         file: src/config/index.js
+        lines: "108-113"
+      - repo: aqie-monitoringstation-backend
+        file: src/api/location/helpers/fetch-data.js
+        lines: "14-23"
 
   # --- Historic data download journey --------------------------------------
   - id: dataselector-frontend__historicaldata-backend
@@ -441,39 +679,84 @@ integrations:
     direction: outbound
     interaction: synchronous
     purpose: >-
-      Drive the historic data selection and download journey: browse pollutant
-      catalogues, request extracts, poll job status and obtain download links.
+      Drive the historic data selection and download journey: browse the pollutant, data
+      source, zone and agglomeration catalogues, count matching stations, create extract
+      jobs, check job status, register email requests, exchange an emailed job reference
+      for a download URL, and fetch single-station download URLs and exceedence tables.
     endpoints:
-      - method: POST
-        path: /AtomDataSelection
-        data: "Selection criteria (pollutants, years, sites) in; extract job reference out"
-      - method: POST
-        path: /AtomDataSelectionJobStatus
-        data: "Job reference in; job state out"
       - method: GET
         path: /AtomDataSelectionPollutantMaster
         data: "Master list of selectable pollutants"
       - method: POST
         path: /AtomDataSelectionPollutantDataSource
-        data: "Pollutant data sources available for selection"
+        data: "Selected pollutant in; data source categories and networks out"
+      - method: GET
+        path: /AtomDataSelectionRegionMaster
+        data: "Zone (region) list for the custom dataset location picker"
+      - method: GET
+        path: /AtomDataSelectionAgglomerationMaster
+        data: "Agglomeration list for the custom dataset location picker"
       - method: POST
-        path: /AtomDataSelectionPresignedUrlMail
-        data: "Job reference in; pre-signed download URL issued by email"
+        path: /AtomDataSelection
+        data: "Selection criteria in; extract job reference out. Also used with count parameters for the live station count"
+      - method: POST
+        path: /AtomDataSelectionJobStatus
+        data: "Job reference in; job status and result URL out"
       - method: POST
         path: /AtomEmailJobDataSelection
-        data: "Email delivery request for a completed extract"
+        data: "Selection criteria and email address in; the text Success out. The backend sends the email later"
+      - method: POST
+        path: /AtomDataSelectionPresignedUrlMail
+        data: "Job reference taken from the emailed link in; pre-signed download URL out"
       - method: POST
         path: /AtomHistoryHourlydata
-        data: "Hourly historic measurement series"
+        data: "Station, pollutant, year and frequency in; download URL for that series out"
       - method: POST
         path: /AtomHistoryexceedence
-        data: "Exceedence statistics for the selected criteria"
+        data: "Station and year in; exceedence table out"
     auth: "CDP internal network"
     confidence: confirmed
+    notes: >-
+      Every call has a deployed URL (service host built from ENVIRONMENT) and a separate
+      localhost URL through the CDP ephemeral gateway with an x-api-key. Counterpart
+      routes: aqie-historicaldata-backend
+      AqieHistoricaldataBackend/Atomfeed/Endpoints/AtomHistoryEndpoints.cs lines 15-26.
+      The backend also registers AtomDataSelectionNonAurnNetworks, which this service does
+      not call.
     evidence:
       - repo: aqie-dataselector-frontend
         file: src/config/config.js
-        lines: "264-368"
+        lines: "274-310,360-365,373-378,386-391,399-404,440-445"
+      - repo: aqie-dataselector-frontend
+        file: src/server/add_pollutant/controller.js
+        lines: "48-58"
+      - repo: aqie-dataselector-frontend
+        file: src/server/datasource/controller.js
+        lines: "129-143"
+      - repo: aqie-dataselector-frontend
+        file: src/server/location_aurn/controller.js
+        lines: "943-970"
+      - repo: aqie-dataselector-frontend
+        file: src/server/customdataset/station-count.js
+        lines: "284-297"
+      - repo: aqie-dataselector-frontend
+        file: src/server/download_aurn/controller.js
+        lines: "60-75,116-129"
+      - repo: aqie-dataselector-frontend
+        file: src/server/download_aurn_status/controller.js
+        lines: "47-70"
+      - repo: aqie-dataselector-frontend
+        file: src/server/emailrequest/controller.js
+        lines: "54-71"
+      - repo: aqie-dataselector-frontend
+        file: src/server/verify/controller.js
+        lines: "61-79"
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/helpers/station-helpers.js
+        lines: "53-84,119-146"
+      - repo: aqie-dataselector-frontend
+        file: src/server/download/controller.js
+        lines: "27-35"
 
   - id: dataselector-frontend__location-backend
     source: aqie-dataselector-frontend
@@ -482,17 +765,27 @@ integrations:
     protocol: HTTPS/REST
     direction: outbound
     interaction: synchronous
-    purpose: "Resolve place names entered in the data selection journey."
+    purpose: "Resolve place names entered in the by-station journey."
     endpoints:
       - method: POST
         path: /osnameplaces
-        data: "Place-name query in; matches out"
+        data: "Place-name query in; OS Names gazetteer matches out"
     auth: "CDP internal network"
     confidence: confirmed
+    notes: >-
+      Answers oq-009 for this caller: POST at HEAD, matching aqie-location-backend
+      src/api/getosname/index.js lines 9-10. A 4xx response is treated as "no match" and
+      shows the location-not-found page (PR #279).
     evidence:
       - repo: aqie-dataselector-frontend
         file: src/config/config.js
-        lines: "252"
+        lines: "256-260"
+      - repo: aqie-dataselector-frontend
+        file: src/server/multiplelocations/controller.js
+        lines: "47-53,150-178"
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/helpers/api-client.js
+        lines: "25-51"
 
   - id: dataselector-frontend__monitoringstation-backend
     source: aqie-dataselector-frontend
@@ -501,17 +794,178 @@ integrations:
     protocol: HTTPS/REST
     direction: outbound
     interaction: synchronous
-    purpose: "Find monitoring stations relevant to the selected location."
+    purpose: >-
+      Find monitoring stations near the selected place, and look up a single station by
+      coordinates for deep links from aqie-maps-frontend.
     endpoints:
       - method: POST
         path: /monitoringstation
-        data: "Location in; nearby stations with pollutants out"
+        data: "{ userLocation, usermiles } in; nearby stations with pollutants out"
+      - method: GET
+        path: /monitoringstation/by-location
+        data: "lat, lng and name query parameters in; one matching station out (404 when none)"
     auth: "CDP internal network"
     confidence: confirmed
+    notes: >-
+      Answers oq-009 for this caller: POST /monitoringstation at HEAD, matching
+      aqie-monitoringstation-backend src/api/location/index.js lines 20-21; by-location is
+      GET (lines 25-26). The by-location call reached main with the station-summary route
+      (PR #272, 9 Oct 2026). A failure of this service is handled differently by journey
+      (see oq-028).
     evidence:
       - repo: aqie-dataselector-frontend
         file: src/config/config.js
-        lines: "258"
+        lines: "262-266"
+      - repo: aqie-dataselector-frontend
+        file: src/server/multiplelocations/controller.js
+        lines: "55-61,180-197"
+      - repo: aqie-dataselector-frontend
+        file: src/server/locationId/controller.js
+        lines: "110-146"
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/helpers/station-helpers.js
+        lines: "179-195"
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/helpers/api-client.js
+        lines: "64-91"
+      - repo: aqie-dataselector-frontend
+        file: src/server/station-summary/controller.js
+        lines: "20-50"
+
+  - id: dataselector-frontend__back-end
+    source: aqie-dataselector-frontend
+    target: aqie-back-end
+    target_kind: aqie-service
+    protocol: HTTPS/REST
+    direction: outbound
+    interaction: synchronous
+    purpose: >-
+      Fetch a station's hourly pollutant history and the summary figures (DAQI index,
+      averages, data capture, exceedances) shown on the Daily Air Quality Index, Last 24
+      hours and Last 7 days tabs of the station page.
+    endpoints:
+      - method: GET
+        path: /monitoringStationHistory
+        data: "siteId (Ricardo AURN form) and period (24h or 7d) as query parameters in; hourly readings and summary figures out"
+    auth: "CDP internal network"
+    confidence: confirmed
+    notes: >-
+      First real call written 27 Oct 2026 and released in PR #282 (3 Nov 2026). Called on
+      every tab load; the tabs are also reloaded by the browser through
+      GET /rendertable/{tab}. A station without an AURN siteId never triggers the call
+      and shows "not available". aqie-back-end caches each siteId and period for 15
+      minutes in process (src/api/locationsite/history-controller.js). Counterpart route:
+      aqie-back-end src/api/locationsite/history-index.js line 9.
+    evidence:
+      - repo: aqie-dataselector-frontend
+        file: src/config/config.js
+        lines: "268-272,333-339"
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/helpers/station-helpers.js
+        lines: "197-219"
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/helpers/api-client.js
+        lines: "64-91"
+      - repo: aqie-dataselector-frontend
+        file: src/server/stationdetails/controller.js
+        lines: "499-560"
+
+  - id: dataselector-frontend__maps-frontend
+    source: aqie-dataselector-frontend
+    target: aqie-maps-frontend
+    target_kind: aqie-service
+    protocol: HTTPS
+    direction: outbound-link
+    interaction: user-redirect
+    purpose: >-
+      Send the citizen from the hub page or a station page to the interactive map, and
+      back. This is link and form construction in the citizen's browser, not a server
+      call.
+    endpoints:
+      - method: GET
+        path: /map
+        data: "Hub page Search on a map link, and the station page Back link when the station was opened from the map"
+      - method: POST
+        path: /map/view
+        data: "Form fields lat, lng and siteId for the station being viewed, so the map centres on it"
+    auth: "None"
+    confidence: confirmed
+    notes: >-
+      Hub link and form are gated by SEARCH_ON_MAP_ENABLED (off by default). Target host
+      comes from MAPS_FRONT_END_URL, defaulting to the aqie-maps-frontend host for the CDP
+      ENVIRONMENT. The Back link is not gated by the flag. The Content Security Policy
+      form-action directive allows the maps origin. Because the citizen's browser follows
+      the link and submits the form, the configured address must be reachable from a
+      citizen's browser, which the CDP-internal default is not (oq-035). Counterpart
+      routes: aqie-maps-frontend src/server/routes/map/index.js lines 15-34.
+    evidence:
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/helpers/map-url.js
+        lines: "9-67"
+      - repo: aqie-dataselector-frontend
+        file: src/server/hubpage/index.njk
+        lines: "26-34"
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/templates/partials/map-nearby-link.njk
+        lines: "7-22"
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/helpers/content-security-policy.js
+        lines: "8-9,39-41"
+      - repo: aqie-dataselector-frontend
+        file: src/config/config.js
+        lines: "120-149"
+
+  - id: maps-frontend__dataselector-frontend
+    source: aqie-maps-frontend
+    target: aqie-dataselector-frontend
+    target_kind: aqie-service
+    protocol: HTTPS
+    direction: outbound-link
+    interaction: user-redirect
+    purpose: >-
+      Let the citizen open a selected station's data page (pollutant summary and
+      downloads) from the map. The map page posts a form from the citizen's browser.
+    endpoints:
+      - method: POST
+        path: /station-summary
+        data: "Form fields lat, lng and name for the selected station; the dataselector looks the station up and redirects to /stationdetails"
+    auth: "None. The dataselector validates the payload with a Joi schema"
+    confidence: confirmed
+    notes: >-
+      Target host comes from DATASELECTOR_FRONT_END_URL in aqie-maps-frontend (default
+      null); the link is hidden when it is unset and the same URL is added to the
+      form-action directive of the content security policy. The map saves its view to
+      sessionStorage just before the form is submitted so the citizen returns to the map
+      as they left it. The route is public and exempt from CSRF token checks, which this
+      cross-origin form post depends on (see security finding 22). Introduced as a GET in
+      PR #272 (9 Oct 2026) and changed to POST in PR #274 (13 Oct 2026) so coordinates
+      stay out of URLs. Because the browser submits the form, the configured address must
+      be reachable from a citizen's browser (oq-035).
+    evidence:
+      - repo: aqie-maps-frontend
+        file: src/config/config.js
+        lines: "209-217"
+      - repo: aqie-maps-frontend
+        file: src/server/routes/map/controller.js
+        lines: "9-15"
+      - repo: aqie-maps-frontend
+        file: src/server/common/templates/partials/station-panel.njk
+        lines: "1-2,17-22"
+      - repo: aqie-maps-frontend
+        file: src/client/javascripts/map-station-panel.js
+        lines: "155-178,241"
+      - repo: aqie-maps-frontend
+        file: src/client/javascripts/map.js
+        lines: "317-323"
+      - repo: aqie-maps-frontend
+        file: src/server/plugins/content-security-policy.js
+        lines: "4,44"
+      - repo: aqie-dataselector-frontend
+        file: src/server/station-summary/index.js
+        lines: "8-29"
+      - repo: aqie-dataselector-frontend
+        file: src/server/station-summary/controller.js
+        lines: "20-50"
 
   # --- Alerts and notifications --------------------------------------------
   - id: alert-backend__ricardo
@@ -555,13 +1009,34 @@ integrations:
     endpoints:
       - method: GET
         path: /notify/unsubscribe-email-link
-        data: "Email identifier carried as a query parameter"
-    auth: "Tokenised link"
+        data: "Email address carried as a plain query parameter"
+    auth: "None validated by the receiving route: the email address is carried in the query string, with no token or signature (finding 72)"
     confidence: confirmed
+    notes: >-
+      The alert backend builds the link as the configured base URL plus ?email= and the
+      address, in four places (the setup-alert response and the three alert processors).
+      The front-end route reads the address from the query string into the session and a
+      confirmation click then calls DELETE /opt-out-email-alert. Re-read 2026-11-19 at
+      aqie-alert-back-end-service e6ff141 and aqie-front-end 210c0c03. See oq-038.
     evidence:
       - repo: aqie-alert-back-end-service
         file: src/config.js
         lines: "153,255"
+      - repo: aqie-alert-back-end-service
+        file: src/users/controllers/setupAlertController.js
+        lines: "102-103"
+      - repo: aqie-alert-back-end-service
+        file: src/users/utils/daqiAlertProcessor.js
+        lines: "332-335"
+      - repo: aqie-alert-back-end-service
+        file: src/users/utils/forecastAlertProcessor.js
+        lines: "218-221"
+      - repo: aqie-alert-back-end-service
+        file: src/users/utils/pollutantAlertProcessor.js
+        lines: "363-366"
+      - repo: aqie-front-end
+        file: src/server/notify/unsubscribe/unsubscribe-email-link/controller.js
+        lines: "54-100"
 
   - id: notify-service__alert-backend
     source: aqie-notify-service
@@ -615,18 +1090,21 @@ integrations:
         data: "Single register record"
     auth: "CDP internal network; an x-api-key header is sent but not validated by the target"
     confidence: confirmed
-    status: "BROKEN CONTRACT — see oq-006"
+    status: "BROKEN CONTRACT — see oq-006 (re-confirmed 2026-11-19 against aqie-dc-backend 49f950cd)"
     notes: >-
-      The frontend calls /get-all/{type} and /get/{type}/{id}, but neither path is
-      served by aqie-dc-backend on main. The frontend has not changed since April
-      while the backend API was reshaped. The public register journey is likely
-      non-functional. This edge previously listed /api/appliances/search,
-      /api/fuels/search and POST /applications; none of those are called by this
-      frontend.
+      Re-verified at aqie-dc-backend 49f950cd (2026-11-17) and aqie-dc-frontend 0100dc25
+      (unchanged since 2026-04-21). The backend registers no /get-all/{type} and no
+      /get/{type}/{id} route and has no catch-all route. Its public read routes are
+      GET /appliances and GET /fuels (live items only), GET /appliances/{id},
+      GET /fuels/{fuelId} and GET /api/fuels/search. There is no public appliance search.
+      The shapes also differ: the appliance summary carries permittedFuels where the
+      frontend reads fuels, so changing only the paths would not fix the appliance list.
+      The frontend is called from src/server/finder/controller.js:106 and
+      src/server/listItem/controller.js:145.
     evidence:
       - repo: aqie-dc-frontend
         file: src/server/common/api/api.js
-        lines: "13-14,71-73"
+        lines: "13-14,20,73-74,77"
 
   - id: defra-forms__dc-backend
     source: defra-forms
@@ -636,24 +1114,39 @@ integrations:
     direction: inbound
     interaction: asynchronous
     purpose: >-
-      Primary intake channel for smoke control applications. A background plugin
-      long-polls the queue every five minutes, maps opaque DEFRA Forms field ids
-      to domain fields, splits multi-appliance repeater submissions, and re-enters
-      its own HTTP routes so queue ingest and API writes share one validation path.
+      Primary intake channel for smoke control applications, appliance and fuel. A
+      background plugin long-polls the queue (default every 15 minutes,
+      AWS_SQS_POLL_INTERVAL_MINUTES), stores each raw message, maps opaque DEFRA Forms
+      field ids to domain fields, splits multi-appliance repeater submissions, and
+      re-enters its own POST /applications route so queue ingest and API writes share
+      one validation path. A message is deleted only after it has been handled; failures
+      are recorded against the stored message and the message is left on the queue for
+      redelivery.
     queue: "aqie-dc-queue"
     data_exchanged: >-
-      meta.formSlug, meta.referenceNumber, meta.timestamp and data.main plus
-      repeater blocks. Routed on formSlug
-      'get-a-solid-fuel-certified-for-use-in-smoke-control-areas'.
+      meta.formSlug, meta.referenceNumber, meta.timestamp and data.main plus repeater
+      blocks. Routed on formSlug 'get-a-solid-fuel-certified-for-use-in-smoke-control-areas'
+      (fuel); any other slug is treated as an appliance application.
     auth: "IAM task role"
     confidence: confirmed
+    notes: >-
+      Queue name comes from AWS_SQS_QUEUE_NAME (default aqie-dc-queue) and the endpoint
+      from AWS_SQS_ENDPOINT (default is a LocalStack address). At most 10 messages are
+      processed per poll and the loop sleeps the full interval even if more are waiting.
+      Consume only: receive and batch delete.
     evidence:
       - repo: aqie-dc-backend
         file: src/sqs/client.js
-        lines: "33-41,45-57,119-122"
+        lines: "25-29,34-42,47-57,59-97,102-144,168-171"
       - repo: aqie-dc-backend
         file: src/plugins/sqs-consumer.js
-        lines: "12-18"
+        lines: "11-47"
+      - repo: aqie-dc-backend
+        file: src/sqs/dispatcher.js
+        lines: "20-65"
+      - repo: aqie-dc-backend
+        file: src/config.js
+        lines: "182-210"
 
   - id: dc-admin-frontend__dc-backend
     source: aqie-dc-admin-frontend
@@ -662,23 +1155,136 @@ integrations:
     protocol: HTTPS/REST
     direction: outbound
     interaction: synchronous
-    purpose: "Caseworker administration of appliances, fuels, applications and technical review."
+    purpose: >-
+      Caseworker administration of smoke control applications. Reads dashboard counts,
+      application and item summaries and the appliance register, and writes technical
+      review checks, review decisions, application start and completion, appliance and
+      fuel record edits, country certification decisions and public visibility.
     endpoints:
       - method: GET
-        path: /applications/search
-        data: "Filter criteria in; application case records out"
+        path: /applications/counts
+        data: "Case counts by status for appliances and fuels"
+      - method: GET
+        path: "/applications/summary-by-status?type={type}"
+        data: "Incomplete applications grouped by status with item names (type is appliance or fuel)"
+      - method: GET
+        path: "/applications/{id}/summary?type={type}"
+        data: "Items in one application with technical review status (type is appliance or fuel)"
+      - method: GET
+        path: /applications/{id}
+        data: "One application; optional groupBy=techReviewStatus splits items into accepted and rejected"
+      - method: GET
+        path: /appliances/{id}
+        data: "Full appliance record"
+      - method: GET
+        path: /appliances/{id}/technical-review
+        data: "Appliance review state and outstanding checks"
+      - method: GET
+        path: /fuels/{id}/technical-review
+        data: "Fuel review state, supplier type and outstanding checks"
+      - method: GET
+        path: "/appliance-types?isPrimary={isPrimary}"
+        data: "Appliance type picklists (isPrimary is true or false)"
+      - method: GET
+        path: /admin/appliances/search
+        data: "Keyword, status filter and page in; appliance register page out"
+      - method: GET
+        path: /admin/appliances/{id}
+        data: "Admin view of one appliance: certification by country, status, legacy comments, instruction manual, test reports"
+      - method: GET
+        path: /api/admin/appliances/{id}/action-history
+        data: "One page of appliance action history, newest first"
+      - method: PATCH
+        path: /applications/{id}/in-progress
+        data: "Reviewer name and email out; application marked in progress"
+      - method: PATCH
+        path: /applications/{id}/complete
+        data: "Reviewer name and email out; application completed (409 if items outstanding)"
+      - method: PATCH
+        path: /appliances/{id}
+        data: "Edited appliance fields (type, model name, model number, nominal output, variant, multifuel)"
       - method: PATCH
         path: /appliances/{id}/technical-review
-        data: "Technical review decision payload"
-      - method: POST
-        path: /admin/import/initiate
-        data: "Bulk import request"
-    auth: "CDP internal network; user authenticated at the frontend via Entra ID"
+        data: "Accept or reject decision plus reviewer identity (409 if checks outstanding)"
+      - method: PATCH
+        path: /appliances/{id}/technical-review/checks
+        data: "One check result and, for some checks, the confirmed data"
+      - method: PATCH
+        path: /appliances/{id}/certification/{country}
+        data: "Certified or uncertified for one UK country plus the deciding user"
+      - method: PATCH
+        path: /appliances/{id}/visibility
+        data: "Show or hide on the public list plus the acting user"
+      - method: PATCH
+        path: /fuels/{id}
+        data: "Edited fuel fields (brand names, original fuel details, description, manufacturing process, quality control)"
+      - method: PATCH
+        path: /fuels/{id}/technical-review
+        data: "Accept or reject decision plus reviewer identity"
+      - method: PATCH
+        path: /fuels/{id}/technical-review/checks
+        data: "One check result (manufacturer letter, test results, fuel details, fuel description)"
+    auth: >-
+      CDP internal network. An x-api-key header (CDP_X_API_KEY) is sent on every call
+      but aqie-dc-backend never reads or validates it. The signed-in reviewer's name and
+      email are sent in request bodies as reviewedBy or decidedBy and are trusted by the
+      backend.
     confidence: confirmed
+    notes: >-
+      All 21 method and path pairs match a route registered in aqie-dc-backend at
+      49f950cd (checked route by route). One payload-level mismatch: the multifuel change
+      page sends the key multifuelAppliance but the backend appliance schema calls it
+      isMultifuelAppliance and the PATCH route rejects unknown keys, so that save is
+      expected to fail with a 400 (oq-023). The appliance register keyword search is
+      restricted by the backend to 50 characters of letters, digits, spaces and a few
+      punctuation marks; other input returns 400 and shows a generic error page. Only
+      GET and PATCH are used; the backend import endpoints are not called.
     evidence:
       - repo: aqie-dc-admin-frontend
+        file: src/server/common/api/api.js
+        lines: "7-19,21-45,53-66"
+      - repo: aqie-dc-admin-frontend
         file: src/config/config.js
-        lines: "BACKEND_URL"
+        lines: "284-298"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/manage-certification/dashboard-data.js
+        lines: "8"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/appliance-applications/applications-data.js
+        lines: "9"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/review-appliance-application/application-data.js
+        lines: "8-10,20-23"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/review-fuel-application/review-fuel-application-data.js
+        lines: "9-11,19-22"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/finish-application-review/application-data.js
+        lines: "9-11,22-26"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/review-appliance/appliance-data.js
+        lines: "7-9,17-20"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/review-fuel/review-fuel-data.js
+        lines: "9,17-20"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/appliance-records/appliance-records-data.js
+        lines: "29"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/appliance-record/appliance-record-data.js
+        lines: "11"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/appliance-record/action-history/action-history-data.js
+        lines: "11-13"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/approval-status/approval-status-data.js
+        lines: "9,26-29"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/change-display-status/change-display-status-data.js
+        lines: "16,34-37"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/multifuel-appliance/multifuel-appliance-data.js
+        lines: "9-11"
 
   - id: dc-admin-frontend__azure-entra
     source: aqie-dc-admin-frontend
@@ -687,36 +1293,88 @@ integrations:
     protocol: HTTPS/OIDC
     direction: outbound
     interaction: synchronous
-    purpose: "Authenticate DEFRA staff into the administration interface."
-    data_exchanged: "OIDC authorisation code flow; identity claims returned"
-    auth: "OpenID Connect via MSAL"
+    purpose: "Authenticate DEFRA staff into the administration interface (sign-in, token exchange and sign-out)."
+    endpoints:
+      - method: GET
+        path: /{tenant}/oauth2/v2.0/authorize
+        data: "Browser redirect built by MSAL; the authorisation code returns to GET /auth/callback"
+      - method: POST
+        path: /{tenant}/oauth2/v2.0/token
+        data: "Authorisation code in, tokens and account claims out"
+      - method: GET
+        path: /{tenant}/oauth2/v2.0/logout
+        data: "Browser redirect on sign-out"
+    data_exchanged: >-
+      Authorisation code flow with state and nonce. The browser is redirected to Entra ID
+      with scopes openid, profile and email and prompt select_account; the code returns
+      to GET /auth/callback and the server exchanges it for tokens. The home account id,
+      username and display name are kept in an encrypted auth cookie.
+    auth: "OpenID Connect confidential client via MSAL; AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_TENANT_ID"
     confidence: confirmed
+    notes: >-
+      Authority is AZURE_AUTHORITY_HOST (default https://login.microsoftonline.com) plus
+      AZURE_TENANT_ID. The authorize and token URLs are built inside MSAL; only the
+      logout path is literal in this repository. Since aqie-dc-admin-frontend PR #19
+      (merged 2026-09-28) authentication is enforced on every route except /, /health,
+      static assets and the three /auth/* routes. No group or role claim is requested or
+      checked, so any signed-in account in the tenant is accepted. An SSO_ENABLED=false
+      setting bypasses Entra entirely and treats every request as a stub user (oq-020).
     evidence:
       - repo: aqie-dc-admin-frontend
         file: src/config/azure-auth.js
-        lines: "7"
+        lines: "7-31"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/plugins/azure-auth.js
+        lines: "10,28-50,56-99,113-124"
+      - repo: aqie-dc-admin-frontend
+        file: src/server/server.js
+        lines: "70-90,113"
 
   - id: dc-backend__cdp-uploader
     source: aqie-dc-backend
     target: cdp-uploader
     target_kind: platform
     protocol: HTTPS/REST
-    direction: bidirectional
-    interaction: asynchronous
-    purpose: "Upload supporting evidence files for virus scanning; receive scan outcome via callback."
+    direction: outbound
+    interaction: synchronous
+    purpose: >-
+      Start a bulk register import upload session with the CDP Uploader, relay the
+      browser's file upload through the backend, and poll scan progress. The scan-outcome
+      callback route has been removed, so the scanned file is no longer read or imported
+      by this service.
     endpoints:
       - method: POST
-        path: /upload-and-scan/{uploadId}
-        data: "Upload initiation; file stored in S3"
+        path: /initiate
+        data: "Bucket, prefix, callback URL, allowed MIME types, size limit and entity metadata out; uploadId, upload URL and status URL back"
+      - method: GET
+        path: "{statusUrl}"
+        data: "Upload and scan progress. The URL is supplied by the caller of GET /admin/import/status and is not checked against the uploader host"
       - method: POST
-        path: /upload-callback
-        data: "Scan result callback received from the uploader"
-    auth: "Platform-internal network"
+        path: /upload-and-scan/{uploadId}
+        data: "File stream proxied unparsed; aqie-dc-backend serves this route and forwards it to the uploader"
+    auth: "Platform-internal network; no application-level authentication"
     confidence: confirmed
+    notes: >-
+      POST /upload-callback was removed in aqie-dc-backend PR #123 (commit a644220,
+      2026-10-27), but initiate still registers a callback URL ending /upload-callback, so
+      the uploader's callback now has no handler. No caller of /admin/import/* or
+      /upload-and-scan/{uploadId} was found in aqie-dc-admin-frontend (04050215) or
+      aqie-dc-frontend (0100dc25). The uploader is used only for Excel register imports
+      (allowed types are the two Excel MIME types); the service has no applicant evidence
+      upload. See oq-025.
     evidence:
       - repo: aqie-dc-backend
+        file: src/common/helpers/cdp-uploader.js
+        lines: "16-73,80-88"
+      - repo: aqie-dc-backend
+        file: src/routes/admin-import.js
+        lines: "22-97,103-138"
+      - repo: aqie-dc-backend
+        file: src/plugins/router.js
+        lines: "57-98"
+      - repo: aqie-dc-backend
         file: src/config.js
-        lines: "144"
+        lines: "137-174"
 
   # --- Pollutant Release and Transfer Register -----------------------------
   - id: prtr-frontend__prtr-backend
@@ -755,13 +1413,50 @@ integrations:
       - method: GET
         path: /reports/get-download-link/{year}
         data: "Year in; pre-signed S3 download link out"
-    auth: "CDP internal network"
+    auth: "CDP internal network; no application-level authentication"
     confidence: confirmed
+    notes: >-
+      Base URL comes from BACKEND_URL (the config default is localhost). Every call goes
+      through one shared GET helper with a 10 second timeout and no retries. The frontend
+      never calls aqie-location-backend itself: place lookups go through /locations/search
+      on this backend.
     evidence:
       - repo: aqie-prtr-frontend
-        file: src/server/common/api/
+        file: src/server/common/api/api-common.js
+        lines: "9-11,37-42"
+      - repo: aqie-prtr-frontend
+        file: src/config/config.js
+        lines: "218-225"
+      - repo: aqie-prtr-frontend
+        file: src/server/common/api/facility-search.js
+        lines: "21-24"
+      - repo: aqie-prtr-frontend
+        file: src/server/common/api/facilities.js
+        lines: "31-34"
+      - repo: aqie-prtr-frontend
+        file: src/server/common/api/facility-details.js
+        lines: "10-13"
+      - repo: aqie-prtr-frontend
+        file: src/server/common/api/competent-authority.js
+        lines: "11-14"
+      - repo: aqie-prtr-frontend
+        file: src/server/common/api/facility-record.js
+        lines: "10-15"
+      - repo: aqie-prtr-frontend
+        file: src/server/common/api/additional-detail.js
+        lines: "12-15"
+      - repo: aqie-prtr-frontend
+        file: src/server/common/api/locations.js
+        lines: "10-13"
+      - repo: aqie-prtr-frontend
+        file: src/server/common/api/reports.js
+        lines: "9,19"
       - repo: aqie-prtr-backend
-        file: src/routes/
+        file: src/plugins/router.js
+        lines: "15-25"
+      - repo: aqie-prtr-backend
+        file: src/routes/reports.js
+        lines: "103-104,113-114"
 
   - id: prtr-backend__location-backend
     source: aqie-prtr-backend
@@ -774,13 +1469,29 @@ integrations:
     endpoints:
       - method: POST
         path: /osnameplaces
-        data: "Place-name query in; matches out"
-    auth: "CDP internal network"
+        data: "{ userLocation } in; Ordnance Survey Names matches out"
+    auth: "CDP internal network; optional x-api-key header from OSPLACE_API_KEY for protected ephemeral environments"
     confidence: confirmed
+    notes: >-
+      Reached through the backend's own GET /locations/search, which validates the query,
+      forwards the CDP trace header and maps the raw response to a stable shape. 10 second
+      timeout (OSPLACE_API_TIMEOUT_MS) and no retries. The default URL is built from the
+      ENVIRONMENT variable. The upstream owns the Ordnance Survey key. The code carries
+      TODO markers about removing the x-api-key header and the commented-out URL block
+      before production.
     evidence:
       - repo: aqie-prtr-backend
+        file: src/services/location-service.js
+        lines: "35-45,59-68"
+      - repo: aqie-prtr-backend
+        file: src/routes/locations.js
+        lines: "35-40,62-70"
+      - repo: aqie-prtr-backend
         file: src/config.js
-        lines: "132"
+        lines: "129-140"
+      - repo: aqie-location-backend
+        file: src/api/getosname/index.js
+        lines: "9-10"
 
   # --- Maps and visualisation ----------------------------------------------
   - id: maps-frontend__back-end
@@ -790,32 +1501,52 @@ integrations:
     protocol: HTTPS/REST
     direction: outbound
     interaction: synchronous
-    purpose: "Supply station and AURN data to the interactive map layer."
+    purpose: "Supply the station list and the observed AURN DAQI values to the interactive map."
     endpoints:
       - method: GET
         path: /monitoringStations
-        data: "Full station list for map plotting"
-      - method: GET
-        path: /monitoringStationInfo
-        data: "Detail for a selected station"
+        data: "Full station list for map plotting and the station list panel"
       - method: GET
         path: /aurnData
-        data: "AURN network dataset"
+        data: "Observed DAQI index per AURN station. Only localSiteID and daqiIndex are read; they colour the markers and fill the panel DAQI row. A station absent from the response is still plotted, grey and unnumbered"
       - method: GET
-        path: /forecasts
-        data: "Forecast fallback, used only when AQIE_FORECAST_API_URL is unset"
+        path: /monitoringStationInfo
+        data: "Per-station detail. Reached only through the proxy route GET /api/monitoring-station-info, which nothing in this repository calls"
     auth: "CDP internal network"
     confidence: confirmed
     notes: >-
-      Does NOT call /measurements. An earlier revision of this catalogue listed
-      it; a full-text search of src/ found no call site.
+      Does NOT call /measurements (see refuted_edges). The only "measurements" token in
+      source is the property name in the /aurnData response. The map ignores measuredAt,
+      updatedAt and the per-pollutant values in /aurnData, so the UTC ISO measuredAt
+      format introduced by aqie-back-end PR #165 (2026-10-30) does not affect it. After
+      PR #165's 75% data-capture rule, a station that has never had a calculable index is
+      absent from the response; the map still plots it (grey, no number, "Not available"
+      in the panel) and neither hides nor estimates it. A station that later fails the
+      rule keeps its previous record in aqie-back-end, because nothing deletes it, so the
+      map shows its old index as current with no age (see oq-030). A /forecasts fallback
+      edge previously existed, used only when AQIE_FORECAST_API_URL is unset. That
+      endpoint was decommissioned by aqie-back-end PR #163. The fallback code is still
+      present at 13a9eb7f (src/server/common/helpers/aqie-forecast-api.js, line 12) but,
+      per CDP environment configuration, AQIE_FORECAST_API_URL is set in every
+      environment the service is deployed to, so it is not reached. See
+      decommissioned_edges and oq-017. A 120000 ms client timeout is set on
+      /monitoringStationInfo, reflecting the 1 + 5N upstream fan-out in that endpoint; the
+      other calls use a 5000 ms timeout. The map page itself does not trigger
+      /monitoringStationInfo: the browser requests only /api/monitoring-stations,
+      /api/aurn-data and /api/forecasts.
     evidence:
       - repo: aqie-maps-frontend
         file: src/server/common/helpers/aqie-back-end.js
-        lines: "33-47"
+        lines: "6-8,14-47"
       - repo: aqie-maps-frontend
-        file: src/server/common/helpers/aqie-forecast-api.js
-        lines: "6-12"
+        file: src/server/routes/api/monitoring-stations/controller.js
+        lines: "16,28"
+      - repo: aqie-maps-frontend
+        file: src/server/routes/api/aurn-data/controller.js
+        lines: "13"
+      - repo: aqie-maps-frontend
+        file: src/client/javascripts/map-station-data.js
+        lines: "105-133,182-196"
 
   - id: maps-frontend__forecast-api
     source: aqie-maps-frontend
@@ -824,39 +1555,33 @@ integrations:
     protocol: HTTPS/REST
     direction: outbound
     interaction: synchronous
-    purpose: "Overlay forecast data on the map."
+    purpose: "Fetch forecast DAQI values for the map's forecast view."
     endpoints:
       - method: GET
         path: /forecast
-        data: "Forecast DAQI values by day and region"
+        data: "Forecast DAQI values by day and location"
     auth: "CDP internal network"
     confidence: confirmed
+    notes: >-
+      AQIE_FORECAST_API_URL is nullable in config (default null) but, per CDP environment
+      configuration, it is set in every environment the service is deployed to, so this
+      is the live path. When it is unset the helper falls back to the removed
+      aqie-back-end GET /forecasts (see decommissioned_edges). The browser requests
+      /api/forecasts on every map load, but the map-type toggle and day selector that
+      would show forecast colouring have no markup in the templates at this commit, so
+      the forecast view cannot be selected from the shipped interface (the forecast tab
+      was hidden deliberately on 2026-08-07, before the previous baseline, "until design
+      implementation is ready").
     evidence:
       - repo: aqie-maps-frontend
+        file: src/server/common/helpers/aqie-forecast-api.js
+        lines: "5-10"
+      - repo: aqie-maps-frontend
+        file: src/server/common/helpers/http-client.js
+        lines: "10-27"
+      - repo: aqie-maps-frontend
         file: src/config/config.js
-        lines: "209-215"
-
-  - id: demo-visualisations__back-end
-    source: aqie-demo-data-visualisations
-    target: aqie-back-end
-    target_kind: aqie-service
-    protocol: HTTPS/REST
-    direction: outbound
-    interaction: synchronous
-    purpose: >-
-      Server-side rendering of demonstration charts. Stations are sourced from
-      /measurements rather than /monitoringStations because only that collection
-      keys stations by the localSiteID used to resolve feature-of-interest ids.
-    endpoints:
-      - method: GET
-        path: /measurements
-        data: "Station list keyed by localSiteID with per-pollutant data"
-    auth: "None (CDP internal network)"
-    confidence: confirmed
-    evidence:
-      - repo: aqie-demo-data-visualisations
-        file: app/lib/aqie-api.js
-        lines: "1-40"
+        lines: "218-226"
 
   # --- Prototype and proof-of-concept edges --------------------------------
   - id: docanalysisawspoc-frontend__docanalysispoc-backend
@@ -923,25 +1648,48 @@ integrations:
     endpoints:
       - method: POST
         path: /setup-alert
-        data: "Verified contact, location, coordinates, channel and language"
+        data: "Verified phone number or email address, location, coordinates, channel and language (SMS and email journeys)"
       - method: DELETE
         path: /opt-out-email-alert
-        data: "Email identifier; removes the subscription"
+        data: "Email address; removes the subscription"
       - method: GET
         path: /aqsr-alert
-        data: "Air quality summary report breaches by day or date range"
+        data: "Air quality summary report breaches by date range, or for a coordinate on the current day"
       - method: GET
         path: /daqi-alert
-        data: "DAQI alert content for coordinates on a given day"
-    auth: "CDP internal network; CDP_X_API_KEY when routed via the protected gateway"
+        data: "DAQI alert content for coordinates on the current day"
+      - method: GET
+        path: /api/subscriptions/{contact}
+        data: "SMS journey only: subscription count for a phone number. No matching route exists on the alert backend (oq-015); the check fails open."
+    auth: "CDP internal network; x-api-key (CDP_X_API_KEY family) only when a localhost request is routed through the protected gateway"
     confidence: confirmed
+    notes: >-
+      Base URL is ALERT_BACKEND_BASE_URL. All calls are skipped when NOTIFY_ENABLED is
+      false (true in every environment per CDP environment configuration). The email
+      journey does not call the subscription-count route; the code comments say the limit
+      of five is enforced by POST /setup-alert returning 400.
     evidence:
       - repo: aqie-front-end
-        file: src/config/schema-extra.js
-        lines: "15-66,189-200"
-      - repo: aqie-front-end
         file: src/server/common/services/notify-backend.js
-        lines: "178-215,300"
+        lines: "40-95,169-216,259-308"
+      - repo: aqie-front-end
+        file: src/server/common/services/notify.js
+        lines: "116-177"
+      - repo: aqie-front-end
+        file: src/server/common/services/notify-subscription-service.js
+        lines: "18-82"
+      - repo: aqie-front-end
+        file: src/server/air-pollution-breaches/fetch-breaches.js
+        lines: "214-232"
+      - repo: aqie-front-end
+        file: src/server/air-pollution-breaches/fetch-location-alert.js
+        lines: "60-71"
+      - repo: aqie-front-end
+        file: src/server/air-pollution-breaches/fetch-daqi-alert.js
+        lines: "130-143"
+      - repo: aqie-front-end
+        file: src/config/schema-extra.js
+        lines: "15-20,51-68,189-200"
 
   - id: front-end__notify-service
     source: aqie-front-end
@@ -957,22 +1705,26 @@ integrations:
         data: "Mobile number in; one-time code dispatched"
       - method: POST
         path: /subscribe/validate-otp
-        data: "Code in; verification result and pending subscription out"
+        data: "Mobile number and code in; verification result out"
       - method: POST
         path: /subscribe/generate-link
-        data: "Email address in; magic link dispatched"
+        data: "Email address, location and coordinates in; magic link dispatched"
       - method: GET
-        path: /subscribe/validate-link/{uuid}
+        path: /subscribe/validate-link/{token}
         data: "Link token in; pending subscription payload out"
-    auth: "CDP internal network; CDP_X_API_KEY when routed via the protected gateway"
+    auth: "CDP internal network; x-api-key (CDP_X_API_KEY family) only when a localhost request is routed through the protected gateway"
     confidence: confirmed
+    notes: >-
+      Base URL is NOTIFY_BASE_URL. All calls are skipped when NOTIFY_ENABLED is false.
+      sendEmailCode (NOTIFY_EMAIL_PATH, default /send-email-code) is defined but has no
+      caller, and the notify service has no such route.
     evidence:
       - repo: aqie-front-end
-        file: src/config/schema-extra.js
-        lines: "11-49"
-      - repo: aqie-front-end
         file: src/server/common/services/notify-backend.js
-        lines: "14,40-70"
+        lines: "40-133,140-167,218-257,310-340"
+      - repo: aqie-front-end
+        file: src/config/schema-extra.js
+        lines: "2-50"
 
   - id: alert-backend__notify-service
     source: aqie-alert-back-end-service
@@ -1029,6 +1781,13 @@ integrations:
     evidence:
       - repo: aqie-notify-service
         file: src/subscribe/services/email-verification.service.js
+        lines: "90-97"
+      - repo: aqie-front-end
+        file: src/server/notify/register/email-confirm-link/routes.js
+        lines: "15"
+      - repo: aqie-front-end
+        file: src/server/notify/register/email-confirm-link/controller.js
+        lines: "162"
 
   # --- Front end supporting integrations ------------------------------------
   - id: front-end__azure-entra
@@ -1048,7 +1807,10 @@ integrations:
     evidence:
       - repo: aqie-front-end
         file: src/server/common/helpers/fetch-oauth-token.js
-        lines: "43-45"
+        lines: "37-94"
+      - repo: aqie-front-end
+        file: src/config/schema-extra.js
+        lines: "247-259,271-290,339-345"
 
   - id: front-end__os-places-ni
     source: aqie-front-end
@@ -1061,29 +1823,17 @@ integrations:
     data_exchanged: "Postcode in; address and coordinates out"
     auth: "OAuth2 bearer token from Entra ID"
     confidence: confirmed
+    notes: >-
+      The host comes from OS_PLACES_POSTCODE_NORTHERN_IRELAND_URL, which has no default, so
+      the host is not visible in source. The variable is set in every environment per CDP
+      environment configuration. Retry, cache and circuit-breaker settings are NI_API_*.
     evidence:
       - repo: aqie-front-end
-        file: src/config/schema-extra.js
-        lines: "260-264"
-
-  - id: front-end__postcodes-io
-    source: aqie-front-end
-    target: postcodes-io
-    target_kind: external
-    protocol: HTTPS/REST
-    direction: outbound
-    interaction: synchronous
-    purpose: "Postcode search, used as the Northern Ireland fallback path."
-    endpoints:
-      - method: GET
-        path: /postcodes
-        data: "Postcode query in; matches out"
-    auth: "None"
-    confidence: confirmed
-    evidence:
+        file: src/server/locations/helpers/get-ni-places.js
+        lines: "48-68,121-164"
       - repo: aqie-front-end
         file: src/config/schema-extra.js
-        lines: "240-245"
+        lines: "260-265"
 
   - id: front-end__google-tag-manager
     source: aqie-front-end
@@ -1099,6 +1849,107 @@ integrations:
     evidence:
       - repo: aqie-front-end
         file: src/client/assets/javascripts/components/load-analytics.mjs
+        lines: "2-60"
+      - repo: aqie-front-end
+        file: src/client/assets/javascripts/application.js
+        lines: "61-80"
+
+  - id: prtr-submissions-frontend__google-tag-manager
+    source: aqie-prtr-submissions-frontend
+    target: google-tag-manager
+    target_kind: external
+    protocol: HTTPS
+    direction: outbound
+    interaction: browser-side
+    purpose: "Usage analytics, loaded only after the visitor accepts analytics cookies."
+    data_exchanged: "Page view and interaction events from the browser"
+    auth: "Container ID (GOOGLE_TAG_MANAGER_KEY)"
+    confidence: confirmed
+    notes: >-
+      Inherited from the CDP frontend template and dormant. GOOGLE_TAG_MANAGER_KEY defaults
+      to empty and both the page templates and the client script do nothing without it.
+      Analytics cookies are off until the visitor opts in, and the server removes Google
+      cookies if they decline. The content security policy already allows the Google hosts.
+      The repository sets no key.
+    evidence:
+      - repo: aqie-prtr-submissions-frontend
+        file: src/server/common/templates/partials/google-tag-manager/head-content.njk
+        lines: "12-18"
+      - repo: aqie-prtr-submissions-frontend
+        file: src/client/javascripts/cookies.js
+        lines: "93-104"
+      - repo: aqie-prtr-submissions-frontend
+        file: src/config/nunjucks/context/context.js
+        lines: "20-23"
+      - repo: aqie-prtr-submissions-frontend
+        file: src/config/config.js
+        lines: "254-261"
+
+  - id: dataselector-frontend__google-tag-manager
+    source: aqie-dataselector-frontend
+    target: google-tag-manager
+    target_kind: external
+    protocol: HTTPS
+    direction: outbound
+    interaction: browser-side
+    purpose: "Usage analytics, loaded only after the citizen accepts analytics cookies."
+    data_exchanged: "Page view and interaction events from the browser"
+    auth: "Container ID (not a secret)"
+    confidence: confirmed
+    notes: >-
+      Container IDs come from GOOGLE_TAG_MANAGER_KEYS and must match the GTM identifier
+      pattern. If consent is withdrawn the server expires the Google cookies on the next
+      response, which also covers no-JavaScript users. The Content Security Policy allows
+      googletagmanager.com, google-analytics.com, analytics.google.com and
+      www.google.com.
+    evidence:
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/templates/layouts/page.njk
+        lines: "13-20,44-52"
+      - repo: aqie-dataselector-frontend
+        file: src/config/nunjucks/context/context.js
+        lines: "17-36,58-68"
+      - repo: aqie-dataselector-frontend
+        file: src/client/javascripts/cookie-banner.js
+        lines: "88-112"
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/helpers/on-pre-response.js
+        lines: "11-34"
+
+  - id: dataselector-frontend__qualtrics
+    source: aqie-dataselector-frontend
+    target: qualtrics
+    target_kind: external
+    protocol: HTTPS
+    direction: outbound
+    interaction: user-redirect
+    purpose: "Link citizens to the feedback survey from the beta banner on every page."
+    data_exchanged: "No service data; user follows an outbound link"
+    auth: "None"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/templates/layouts/page.njk
+        lines: "74-79"
+
+  - id: dataselector-frontend__jquery-cdn
+    source: aqie-dataselector-frontend
+    target: jquery-cdn
+    target_kind: external
+    protocol: HTTPS
+    direction: outbound
+    interaction: browser-side
+    purpose: "Load jQuery 3.6.0 in the citizen's browser for the MoJ Frontend components."
+    data_exchanged: "Script request out; script back. No AQIE data is sent."
+    auth: "None. The script tag carries a subresource integrity hash"
+    confidence: confirmed
+    evidence:
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/templates/layouts/page.njk
+        lines: "123-127"
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/helpers/content-security-policy.js
+        lines: "20-28"
 
   # --- Maps ----------------------------------------------------------------
   - id: maps-prototype__back-end
@@ -1159,13 +2010,43 @@ integrations:
     auth: "None"
     confidence: confirmed
     open_question: "Confirm OpenFreeMap is acceptable as a production dependency (oq-008)."
+    notes: >-
+      The style address (the liberty style) is hard-coded in the client and not
+      configurable. The tile origin is allowed in the connect-src and img-src directives
+      of the content security policy.
     evidence:
       - repo: aqie-maps-frontend
         file: src/client/javascripts/map.js
-        lines: "10"
+        lines: "62-66"
       - repo: aqie-maps-frontend
         file: src/server/plugins/content-security-policy.js
-        lines: "14-34"
+        lines: "15-24,40"
+
+  - id: maps-frontend__google-tag-manager
+    source: aqie-maps-frontend
+    target: google-tag-manager
+    target_kind: external
+    protocol: HTTPS
+    direction: outbound
+    interaction: browser-side
+    purpose: "Usage analytics, loaded only after the citizen accepts analytics cookies."
+    data_exchanged: "Page view and interaction events from the browser"
+    auth: "Measurement ID"
+    confidence: confirmed
+    notes: >-
+      Loads both the Google Analytics tag and a Google Tag Manager container, gated on the
+      consent cookie. The content security policy also allows google.com and the
+      google-analytics.com and analytics.google.com wildcards for connections.
+    evidence:
+      - repo: aqie-maps-frontend
+        file: src/client/javascripts/load-analytics.js
+        lines: "7-35"
+      - repo: aqie-maps-frontend
+        file: src/client/javascripts/application.js
+        lines: "34-38"
+      - repo: aqie-maps-frontend
+        file: src/server/plugins/content-security-policy.js
+        lines: "15-24,31-38"
 
   - id: maps-prototype__openfreemap
     source: aqie-maps-prototype
@@ -1183,26 +2064,40 @@ integrations:
         lines: "10"
 
   # --- Analytics and exploration -------------------------------------------
-  - id: demo-visualisations__defra-sos
+  - id: demo-visualisations__ricardo
     source: aqie-demo-data-visualisations
-    target: defra-sos
+    target: ricardo-ukair
     target_kind: external
-    protocol: HTTPS/OGC SOS
+    protocol: HTTPS/REST
     direction: outbound
     interaction: synchronous
     purpose: >-
-      Retrieve historic hourly observation series for demonstration charts,
-      because aqie-back-end exposes no history endpoint.
+      Read the current AURN station list and hourly pollutant readings for the
+      prototype's station pages. The demo is self-contained and holds the Ricardo
+      account credentials itself, rather than going through aqie-back-end.
     endpoints:
+      - method: POST
+        path: /api/login_check
+        data: "Account email and password in; bearer token out (cached for 50 minutes)"
       - method: GET
-        path: /service?service=AQD&version=1.0.0&request=GetObservation
-        data: "Feature-of-interest and temporal range in; SWE-encoded hourly series out"
-    auth: "None"
+        path: /api/site_meta_datas
+        data: "Station list with per-pollutant metadata (with-pollutants=true). Only current stations are kept; cached in memory for 6 hours"
+      - method: GET
+        path: /api/pollutant_measurement_datas
+        data: "Hourly readings for one station and one pollutant over a start-date and end-date window; one call per pollutant, in parallel"
+    auth: "Login endpoint exchanges account email and password (RICARDO_API_EMAIL, RICARDO_API_PASSWORD) for a bearer token"
     confidence: confirmed
+    notes: >-
+      The code default is the production host. RICARDO_API_LOGIN_URL,
+      RICARDO_API_ALL_DATA_URL and RICARDO_API_SITE_ID_URL override each URL, and the
+      three are set in the dev environment only per CDP environment configuration.
+      Replaced the aqie-back-end /measurements and DEFRA SOS dependencies in PR #15
+      (merged 2026-10-07). Checked at aqie-demo-data-visualisations 7f8d8f53. See oq-012
+      (which Ricardo host is authoritative) and oq-039 (whose account the prototype uses).
     evidence:
       - repo: aqie-demo-data-visualisations
-        file: app/lib/sos-history.js
-        lines: "18-21"
+        file: app/lib/ricardo-api.js
+        lines: "24-36,102-138,140-187,222-235,266-299"
 
   - id: demo-visualisations__postcodes-io
     source: aqie-demo-data-visualisations
@@ -1211,7 +2106,7 @@ integrations:
     protocol: HTTPS/REST
     direction: outbound
     interaction: synchronous
-    purpose: "Place and postcode search for the demonstration UI."
+    purpose: "Postcode, outcode and place-name geocoding for the demonstration search, plus a connectivity probe on the landing page."
     endpoints:
       - method: GET
         path: /postcodes/{postcode}
@@ -1221,12 +2116,16 @@ integrations:
         data: "Outcode lookup"
       - method: GET
         path: /places
-        data: "Place-name search"
+        data: "Place-name search (limit 1)"
     auth: "None"
     confidence: confirmed
     evidence:
       - repo: aqie-demo-data-visualisations
         file: app/lib/search.js
+        lines: "18-39,41-86"
+      - repo: aqie-demo-data-visualisations
+        file: app/lib/ricardo-api.js
+        lines: "375-381"
 
   - id: laqm-data-explorer__laqm-portal
     source: aqie-laqm-data-explorer
@@ -1275,12 +2174,24 @@ integrations:
         path: /xapi/getLocalAuthorities/json
         data: "UK local authority list"
     auth: "X-API-Key and X-API-PartnerId headers"
-    caching: "12-hour in-process cache with stale-value fallback on timeout or bad payload"
+    caching: "12-hour in-process cache with stale-value fallback on timeout, non-200 response or bad payload"
     confidence: confirmed
+    notes: >-
+      The URL is a literal in code. 2.5 second timeout. Sent through the CDP egress proxy
+      when CDP_HTTPS_PROXY or CDP_HTTP_PROXY is set, and pinned to HTTP/1.1 because the
+      portal failed over HTTP/2 after the undici 8 upgrade (PRs #293 and #294, 13 Nov
+      2026). The credential settings default to the variable names themselves, so an unset
+      environment still makes the call with placeholder headers (security finding 31).
     evidence:
       - repo: aqie-dataselector-frontend
         file: src/server/location_aurn/controller.js
-        lines: "596,631-650"
+        lines: "26,801-823,851-894"
+      - repo: aqie-dataselector-frontend
+        file: src/server/common/helpers/proxy.js
+        lines: "10-13,59-83"
+      - repo: aqie-dataselector-frontend
+        file: src/config/config.js
+        lines: "446-457"
 
   # --- Historic data backend upstreams -------------------------------------
   - id: historicaldata-backend__ukair-atom
@@ -1297,15 +2208,29 @@ integrations:
     endpoints:
       - method: GET
         path: "/data/atom-dls/observations/auto/GB_FixedObservations_{year}_{siteID}.xml"
-        data: "INSPIRE/OM-SWE observation XML for automatic monitoring sites"
+        data: "INSPIRE/OM-SWE observation XML for automatic monitoring sites (every journey; the only path used by the single-station journey)"
       - method: GET
-        path: "/data/atom-dls/observations/non-auto/..."
-        data: "INSPIRE/OM-SWE observation XML for non-automatic sites"
+        path: "/data/atom-dls/observations/non-auto/GB_FixedObservations_{year}_{siteID}.xml"
+        data: "INSPIRE/OM-SWE observation XML for non-automatic sites (data selection journey only, for non-AURN networks other than 10, 11 and 13, which are listed under the non-AURN source but fetched from the auto path)"
     auth: "None (public endpoint)"
     confidence: confirmed
+    notes: >-
+      One request per site and year, issued one at a time (MaxDegreeOfParallelism is 1 at
+      73a763ab). A 404, 304 or other non-success response is logged and treated as an
+      empty result. Traffic leaves through the CDP egress proxy.
     evidence:
       - repo: aqie-historicaldata-backend
-        file: AqieHistoricaldataBackend/Atomfeed/
+        file: AqieHistoricaldataBackend/Program.cs
+        lines: "55-67"
+      - repo: aqie-historicaldata-backend
+        file: AqieHistoricaldataBackend/Atomfeed/Services/AtomFeedFetchServiceBase.cs
+        lines: "18-26"
+      - repo: aqie-historicaldata-backend
+        file: AqieHistoricaldataBackend/Atomfeed/Services/AtomDataSelectionHourlyFetchService.cs
+        lines: "34"
+      - repo: aqie-historicaldata-backend
+        file: AqieHistoricaldataBackend/Atomfeed/Services/AtomHourlyFetchService.cs
+        lines: "19"
 
   - id: historicaldata-backend__ricardo
     source: aqie-historicaldata-backend
@@ -1314,19 +2239,33 @@ integrations:
     protocol: HTTPS/REST
     direction: outbound
     interaction: synchronous
-    purpose: "Resolve which AURN sites are relevant to a data selection."
+    purpose: >-
+      Resolve which AURN sites are relevant to a data selection, and build the region and
+      agglomeration master lists served to the frontend.
     endpoints:
       - method: POST
         path: /api/login_check
         data: "Credentials exchanged for bearer token"
       - method: GET
         path: "/api/site_meta_datas?with-closed=true&with-pollutants=1"
-        data: "AURN site metadata and pollutant coverage"
+        data: "AURN site metadata, region and agglomeration identifiers, and pollutant coverage"
     auth: "Bearer token; credential variables RICARDO_API_KEY and RICARDO_API_VALUE"
     confidence: confirmed
+    notes: >-
+      RICARDO_API_KEY holds an account email address and RICARDO_API_VALUE a password. The
+      host is fixed in code as api-ukair.defra.gov.uk. There is no caching: every AURN
+      selection, region-master call and agglomeration-master call logs in and downloads
+      the full site list again.
     evidence:
       - repo: aqie-historicaldata-backend
-        file: AqieHistoricaldataBackend/Atomfeed/
+        file: AqieHistoricaldataBackend/Program.cs
+        lines: "69-81"
+      - repo: aqie-historicaldata-backend
+        file: AqieHistoricaldataBackend/Atomfeed/Services/AuthService.cs
+        lines: "19-25,48-49"
+      - repo: aqie-historicaldata-backend
+        file: AqieHistoricaldataBackend/Atomfeed/Services/RicardoSiteMetadata.cs
+        lines: "14-22"
 
   - id: historicaldata-backend__laqm-portal
     source: aqie-historicaldata-backend
@@ -1335,19 +2274,29 @@ integrations:
     protocol: HTTPS/REST
     direction: outbound
     interaction: synchronous
-    purpose: "Resolve local authority areas and diffusion tube data for non-AURN selections."
+    purpose: >-
+      Resolve a local authority selection to coordinates (diffusion tube grid references)
+      so that monitoring sites within about five miles (8,046 metres) of the authority can
+      be selected. Used for any data source when the region type is LocalAuthority.
     endpoints:
       - method: GET
         path: /xapi/getLocalAuthorities/json
-        data: "Local authority reference list"
+        data: "Local authority reference list, used to attach a region name"
       - method: GET
         path: /xapi/getSingleDTDataByYear/{year}/{laId}/{page}/{perPage}/json
-        data: "Diffusion tube data with OS grid references"
-    auth: "X-API-Key and X-API-PartnerId headers"
+        data: "Diffusion tube data with OS grid references (previous calendar year, first page of 100 rows)"
+    auth: "X-API-Key and X-API-PartnerId headers; credential variables LAQM_API_KEY and LAQM_USERID"
     confidence: confirmed
     evidence:
       - repo: aqie-historicaldata-backend
-        file: AqieHistoricaldataBackend/Atomfeed/
+        file: AqieHistoricaldataBackend/Program.cs
+        lines: "83-95"
+      - repo: aqie-historicaldata-backend
+        file: AqieHistoricaldataBackend/Atomfeed/Services/AtomDataSelectionLocalAuthoritiesService.cs
+        lines: "24-30,44-50"
+      - repo: aqie-historicaldata-backend
+        file: AqieHistoricaldataBackend/Atomfeed/Services/AtomDataSelectionStationBoundryService.cs
+        lines: "54-55,110-113,121"
 
   - id: historicaldata-backend__notify-service
     source: aqie-historicaldata-backend
@@ -1358,17 +2307,27 @@ integrations:
     interaction: asynchronous
     purpose: >-
       Email the citizen a link to a completed extract. A background service picks up
-      pending email jobs on an interval.
+      pending email jobs on an interval, rebuilds the extract, then posts the request.
     endpoints:
       - method: POST
         path: /send-notification
-        data: "Recipient email address, Notify template identifier, and the extract download link as personalisation"
+        data: "Recipient email address, Notify template identifier, and a download link as personalisation"
     auth: "CDP internal network"
     confidence: confirmed
+    notes: >-
+      Base address and path come from NOTIFY_BASEADDRESS and NOTIFY_URL (the path value is
+      set outside the repository and confirmed from the notify service's route). The call
+      uses a bare HttpClient, so it bypasses the CDP proxy handler; the named client
+      "sendnotification" registered in Program.cs is never used. The link in the email is
+      EMAIL_BASEADDRESS plus the job id and creation time in Unix milliseconds, that is a
+      frontend page, which later asks this service for a fresh pre-signed URL.
     evidence:
       - repo: aqie-historicaldata-backend
-        file: AqieHistoricaldataBackend/
-        lines: "NOTIFY_BASEADDRESS + NOTIFY_URL configuration"
+        file: AqieHistoricaldataBackend/Atomfeed/Services/AtomDataSelectionEmailJobService.cs
+        lines: "143,199-231"
+      - repo: aqie-notify-service
+        file: src/subscribe/routes/send-notification.route.js
+        lines: "4-13"
 
   - id: historicaldata-backend__s3
     source: aqie-historicaldata-backend
@@ -1378,14 +2337,21 @@ integrations:
     direction: outbound
     interaction: synchronous
     purpose: >-
-      Read seeded reference spreadsheets on startup, upload generated CSV and ZIP
-      extracts, and issue pre-signed download URLs valid for seven days.
+      Read the two reference spreadsheets (at start-up and on demand), upload generated
+      CSV and ZIP extracts, and issue pre-signed download URLs valid for seven days.
     data_exchanged: "Reference spreadsheets in; extract artefacts out; pre-signed URLs issued"
     auth: "IAM role via the AWS SDK"
     confidence: confirmed
     evidence:
       - repo: aqie-historicaldata-backend
-        file: AqieHistoricaldataBackend/
+        file: AqieHistoricaldataBackend/Atomfeed/Services/AWSS3BucketService.cs
+        lines: "19-24,55-56,85-91,111-117"
+      - repo: aqie-historicaldata-backend
+        file: AqieHistoricaldataBackend/Atomfeed/Services/AWSPreSignedURLService.cs
+        lines: "12-19"
+      - repo: aqie-historicaldata-backend
+        file: AqieHistoricaldataBackend/Atomfeed/Services/AtomDataSelectionNonAurnNetworks.cs
+        lines: "72-78"
 
   # --- Object storage edges -------------------------------------------------
   - id: prtr-backend__s3
@@ -1396,14 +2362,32 @@ integrations:
     direction: outbound
     interaction: synchronous
     purpose: >-
-      Locate annual PRTR dataset XML files and issue pre-signed download URLs.
-      Uses ListObjectsV2, HeadObject and GetObject pre-signing.
-    data_exchanged: "Object listings and metadata in; time-limited download URL out"
+      Find the annual PRTR dataset XML file for a year and issue a time-limited
+      pre-signed download URL. Read-only: the service lists, reads metadata and signs,
+      and never writes to the bucket.
+    data_exchanged: "Object listings and per-object metadata in; pre-signed GetObject URL (valid 9,000 seconds) out"
     auth: "ECS task IAM role"
     confidence: confirmed
+    notes: >-
+      The MongoDB shortcut for the object key cannot succeed (it reads a collection named
+      Reports, the loader writes reports, and nothing writes the s3Key field), so every
+      request runs ListObjectsV2 and one HeadObject per object, matching the
+      encodedfilename metadata key against uk_prtr_dataset_<year>.xml. That metadata key is
+      the one the CDP Uploader writes. Nothing in the four PRTR repositories uploads to the
+      bucket - see oq-010.
     evidence:
       - repo: aqie-prtr-backend
         file: src/services/s3-service.js
+        lines: "35-37,64-94,103-128"
+      - repo: aqie-prtr-backend
+        file: src/services/reports-service.js
+        lines: "77-143"
+      - repo: aqie-prtr-backend
+        file: src/routes/reports.js
+        lines: "65-99,112-122"
+      - repo: aqie-prtr-backend
+        file: src/config.js
+        lines: "115-128"
 
   - id: prtr-frontend__s3
     source: aqie-prtr-frontend
@@ -1423,22 +2407,28 @@ integrations:
         file: src/server/routes/download/download-proxy.js
         lines: "79-99"
 
-  - id: dc-backend__s3
-    source: aqie-dc-backend
+  - id: dataselector-frontend__s3
+    source: aqie-dataselector-frontend
     target: AWS S3
     target_kind: datastore
-    protocol: AWS SDK
+    protocol: HTTPS
     direction: outbound
     interaction: synchronous
-    purpose: "Read uploaded evidence and bulk import files after the uploader reports a clean scan."
-    data_exchanged: "Bucket and key arrive in the uploader callback; object contents read back"
-    auth: "ECS task IAM role"
+    purpose: >-
+      Check that the pre-signed download URL returned for an emailed link still works
+      before showing it to the citizen. The citizen's browser then follows the same kind
+      of URL to download the extract. The service has no AWS SDK and no IAM access.
+    data_exchanged: "A GET against the pre-signed URL that is aborted after the first bytes; no extract content is read"
+    auth: "Pre-signed URL"
     confidence: confirmed
+    notes: >-
+      The URL is taken from the aqie-historicaldata-backend response with no scheme or
+      host check. The full response, including the URL, is written to the application
+      log at info level (verify/controller.js line 73).
     evidence:
-      - repo: aqie-dc-backend
-        file: src/common/helpers/s3-download.js
-      - repo: aqie-dc-backend
-        file: src/routes/upload-callback.js
+      - repo: aqie-dataselector-frontend
+        file: src/server/verify/controller.js
+        lines: "61-79,122-168"
 
 # ---------------------------------------------------------------------------
 # Datastores owned by services (not edges between services)
@@ -1446,37 +2436,202 @@ integrations:
 service_datastores:
   - service: aqie-back-end
     stores: ["MongoDB"]
-    notes: "Ingested Ricardo and forecast data; distributed locking via mongo-locks."
+    notes: >-
+      Collections: monitoringStations (Ricardo station cache), aurnMeasurements
+      (per-station DAQI), measurements and historicalMeasurements (UK-AIR SOS pipeline),
+      forecasts and historicalForecasts (UK-AIR forecast RSS), locks (ingest locks with a
+      one hour TTL index). Since PR #163 nothing reads measurements,
+      historicalMeasurements, forecasts or historicalForecasts. Locking is a hand-written
+      insert into the locks collection; the mongo-locks package is instantiated but never
+      used.
   - service: aqie-forecast-api
     stores: ["MongoDB"]
     notes: "Parsed Met Office forecast documents."
   - service: aqie-location-backend
     stores: ["MongoDB"]
+    notes: >-
+      Connected and indexed at start-up but holds no application data. The only collections
+      are CDP template scaffolding: example-data (read by the scaffold GET /example routes)
+      and mongo-locks (lock helper with no caller). The place-name path does not touch the
+      database. Nothing is cached.
   - service: aqie-monitoringstation-backend
     stores: ["MongoDB"]
+    notes: >-
+      Database named by MONGO_DATABASE. The stations collection caches the Ricardo station
+      list: upserted by station name at start-up and on STATIONS_SYNC_SCHEDULE (default
+      every six hours), pruned of stations Ricardo no longer returns, with a TTL index on
+      syncedAt (STATIONS_CACHE_TTL_SECONDS, default one week) as a backstop. mongo-locks
+      holds the sync mutex. Read only by GET /monitoringstation/by-location; POST
+      /monitoringstation does not touch MongoDB. No Redis or AWS use in application code.
   - service: aqie-alert-back-end-service
-    stores: ["MongoDB", "Redis"]
-    notes: "Subscriber records and alert dispatch state."
+    stores: ["MongoDB"]
+    notes: "Subscriber records and alert dispatch state. Redis appears only in the local compose file, not in the code or package manifest (checked at e6ff1414)."
   - service: aqie-notify-service
-    stores: ["MongoDB", "Redis"]
-    notes: "Subscription lifecycle, OTP and link validation state."
+    stores: ["MongoDB"]
+    notes: "Subscription lifecycle, OTP and link validation state. Redis appears only in the local compose file, not in the code or package manifest (checked at 1646e247)."
   - service: aqie-dc-backend
-    stores: ["MongoDB", "Redis", "AWS S3", "AWS SQS"]
-    notes: "Appliance/fuel registers, applications, uploaded evidence, async message handling."
+    stores: ["MongoDB", "AWS SQS"]
+    notes: >-
+      MongoDB holds the Appliances, Fuels, Applications, SqsMessages, Actions and
+      ApplianceTypes collections (plus mongo-locks). SQS is consumed only: receive and
+      batch delete, no producer. Redis appears only in compose.yml and the service opens
+      no Redis connection. No S3 client call remains since 2026-10-27: the bucket named in
+      configuration is the CDP Uploader's destination and is never read by this service.
+  - service: aqie-dc-admin-frontend
+    stores: ["Redis"]
+    notes: >-
+      Session state only. The yar session cache uses catbox-redis in production
+      (catbox-memory elsewhere); the auth cookie is a stateless encrypted cookie that
+      carries the signed-in user, not a Redis record. No database; every case read and
+      write goes to aqie-dc-backend.
   - service: aqie-prtr-backend
     stores: ["MongoDB", "AWS S3"]
-    notes: "Facility records; generated report files in S3."
+    notes: >-
+      MongoDB holds the facility and report data loaded by the offline TSV ingest (written
+      as a one-off migration). The S3 bucket holds the published annual dataset XML files,
+      which the service only lists and pre-signs and never writes. The /reports year list
+      is a static list in code, not read from MongoDB.
+  - service: aqie-prtr-frontend
+    stores: ["Redis"]
+    notes: >-
+      Session cache only (catbox-redis, yar): search text, candidate locations and form
+      errors. No database. MongoDB appears only in the template Compose file.
+  - service: aqie-prtr-submissions-backend
+    stores: ["MongoDB"]
+    notes: >-
+      Template scaffold. Connects to its own database and holds only the mongo-locks and
+      example-data collections. No submission data model on main.
+  - service: aqie-prtr-submissions-frontend
+    stores: ["Redis"]
+    notes: >-
+      Session cache only (catbox-redis, yar): the language preference. In-memory cache
+      outside production.
   - service: aqie-historicaldata-backend
-    stores: ["MongoDB", "AWS S3", "Redis"]
-    notes: "Historic measurement extracts staged to S3 and delivered via pre-signed URLs."
+    stores: ["MongoDB", "AWS S3"]
+    notes: >-
+      Holds no historic measurements; every extract is rebuilt from the UK-AIR Atom
+      download service. MongoDB: extract job and email job documents (aqie_csvexport_jobs,
+      aqie_csvemailexport_jobs, the latter holding the citizen's email address), reference
+      data seeded from S3 spreadsheets (aqie_atom_non_aurn_networks_pollutant_master,
+      aqie_atom_non_aurn_networks_station_details), a start-up seed lock
+      (aqie_atom_seed_locks) and the CDP template's "example" collection. S3: the two
+      reference spreadsheets, and generated CSV and ZIP extracts delivered by seven-day
+      pre-signed URL. No retention rule is expressed in code for jobs or extracts.
   - service: aqie-front-end
     stores: ["Redis"]
-    notes: "Session and response caching only (catbox-redis, yar)."
+    notes: >-
+      Server-side session store and response caches only (catbox-redis with ioredis in
+      deployed environments, catbox-memory locally; the yar session cookie holds only the
+      session id). The session holds the in-progress alert sign-up, including the
+      citizen's email address or mobile number, for the session lifetime (default four
+      hours). No database.
+  - service: aqie-demo-data-visualisations
+    stores: []
+    notes: "None. In-process memory caches only (station list 6 hours, Ricardo bearer token 50 minutes)."
   - service: aqie-dataselector-frontend
     stores: ["Redis"]
     notes: >-
-      Session state only. AWS SDK packages are declared in package.json but not
-      imported; the service only follows pre-signed URLs handed to it.
+      Journey session state only: @hapi/yar over catbox-redis when SESSION_CACHE_ENGINE is
+      redis (the production default), in-memory otherwise; four-hour TTL. A per-process
+      in-memory cache also holds the LAQM local authority list for 12 hours. The AWS SDK
+      packages were removed in Oct 2026; the service has no S3 client and only follows or
+      checks pre-signed URLs handed to it by aqie-historicaldata-backend.
+  - service: aqie-maps-frontend
+    stores: ["Redis"]
+    notes: >-
+      Session cache engine only (catbox-redis in deployed environments, catbox-memory
+      locally). The yar session plugin is registered but no route reads or writes a
+      session, so nothing is currently stored. No database. The local compose.yml starts
+      Redis and an AWS emulator, not MongoDB. Map view state is held in the citizen's
+      browser sessionStorage.
+
+# ---------------------------------------------------------------------------
+# Edges removed because the target endpoint has been decommissioned, or because the
+# calling service has removed the call.
+# Retained as a record. NOT rendered in diagrams.
+# ---------------------------------------------------------------------------
+decommissioned_edges:
+  - id: front-end__back-end__measurements
+    claim: "aqie-front-end -> aqie-back-end GET /measurements"
+    decommissioned_by: "aqie-back-end PR #163"
+    decommissioned_at_utc: "2026-09-23T00:00:00Z"
+    reason: >-
+      Superseded by GET /monitoringStationInfo, which every runtime request in
+      aqie-front-end now uses (see front-end__back-end). CDP logs showed no production
+      traffic on /measurements before removal.
+    residual_risk: >-
+      Dead code remains in aqie-front-end at 210c0c03: MEASUREMENTS_API_URL, the
+      USE_NEW_RICARDO_MEASUREMENTS_ENABLED flag and the branch that reads the old URL
+      (extracted/api-utils.js, buildOldMeasurementsSelection). No runtime caller can reach
+      that branch, because the measurement fetch forces the new source for any non-boolean
+      argument and the English controller hard-codes it. Setting the flag to false
+      therefore does not call the removed endpoint. In the Welsh controller it would hand
+      the new response object to the legacy parser, which by reading the code (not run)
+      fails, so the Welsh location page would most likely return an HTTP 500.
+      MEASUREMENTS_API_URL is still listed in the committed .env.production and
+      .env.perf-test templates. See oq-016.
+
+  - id: maps-frontend__back-end__forecasts
+    claim: "aqie-maps-frontend -> aqie-back-end GET /forecasts"
+    decommissioned_by: "aqie-back-end PR #163"
+    decommissioned_at_utc: "2026-09-23T00:00:00Z"
+    reason: >-
+      Fallback path used only when AQIE_FORECAST_API_URL was unset. The primary path is
+      aqie-forecast-api GET /forecast, which is unaffected.
+    residual_risk: >-
+      The fallback code is still present at aqie-maps-frontend 13a9eb7f
+      (src/server/common/helpers/aqie-forecast-api.js, line 12) and would now 404 if
+      AQIE_FORECAST_API_URL were unset. Checked 2026-11-19: per CDP environment
+      configuration, the variable is set in every environment the service is deployed to,
+      so the fallback is not reached in a deployed environment. See oq-017.
+
+  - id: demo-visualisations__back-end__measurements
+    claim: "aqie-demo-data-visualisations -> aqie-back-end GET /measurements"
+    decommissioned_by: "aqie-back-end PR #163"
+    decommissioned_at_utc: "2026-09-23T00:00:00Z"
+    reason: >-
+      CDP logs showed no production traffic on /measurements across the log retention
+      window, so the endpoint was removed.
+    residual_risk: >-
+      Resolved. aqie-demo-data-visualisations PR #15 (merged 2026-10-07) removed the
+      aqie-back-end client and now reads station metadata and hourly readings directly
+      from the Ricardo UK-AIR API (demo-visualisations__ricardo). It was not a migration
+      to /monitoringStationInfo, so the feature-of-interest mapping is no longer needed.
+      See oq-018.
+
+  - id: demo-visualisations__defra-sos
+    claim: "aqie-demo-data-visualisations -> DEFRA SOS GetObservation"
+    decommissioned_by: "aqie-demo-data-visualisations PR #15"
+    decommissioned_at_utc: "2026-10-07T00:00:00Z"
+    reason: >-
+      The caller was removed, not the target. The demo no longer fetches hourly series from
+      the DEFRA Sensor Observation Service (sos-history.js and the XML parser dependency
+      were deleted); hourly readings now come from the Ricardo UK-AIR API.
+    residual_risk: "None. The DEFRA SOS feed is unaffected and is still read by aqie-back-end (back-end__defra-sos)."
+
+  - id: privatebeta-api-perftest__back-end
+    claim: "aqie-privatebeta-api-perftest -> aqie-back-end GET /forecasts, GET /measurements"
+    decommissioned_by: "aqie-back-end PR #163"
+    decommissioned_at_utc: "2026-09-23T00:00:00Z"
+    reason: "Both target endpoints removed."
+    residual_risk: >-
+      The performance test entrypoint hardcodes a plan that exercises both endpoints, so
+      the suite will now report failures against them until updated.
+
+  - id: dc-backend__s3
+    claim: "aqie-dc-backend -> AWS S3 (read scanned uploads after the CDP Uploader callback)"
+    decommissioned_by: "aqie-dc-backend PR #123 (commit a644220)"
+    decommissioned_at_utc: "2026-10-27T17:45:34Z"
+    reason: >-
+      The uploader callback handler (src/routes/upload-callback.js) and the S3 download
+      helper (src/common/helpers/s3-download.js) were deleted. No S3 client is imported
+      anywhere in src; the only AWS SDK import is @aws-sdk/client-sqs. The bucket named in
+      configuration is the CDP Uploader's destination: the uploader writes to it and this
+      service never reads it.
+    residual_risk: >-
+      POST /admin/import/initiate still registers the removed /upload-callback URL, so
+      uploads started through it are scanned and stored but never imported, and nothing
+      cleans the bucket. @aws-sdk/client-s3 is still declared in package.json. See oq-025.
 
 # ---------------------------------------------------------------------------
 # Edges that were asserted but disproved. Recorded so they are not re-added.
@@ -1485,27 +2640,37 @@ refuted_edges:
   - claim: "aqie-dataselector-frontend -> cdp-uploader"
     verdict: refuted
     reason: >-
-      CDP_UPLOADER_URL and AWS_S3_BUCKET_NAME are defined in config but read
-      nowhere. There is no upload route, no multipart handler and no file input
-      in any template. The config block is dead, copied from the document
-      analysis proof of concept along with unused langchain, pdf2json, xlsx and
-      aws-sdk dependencies.
-    checked_at_utc: "2026-09-15T00:00:00Z"
+      CDP_UPLOADER_URL and AWS_S3_BUCKET_NAME were defined in config but read nowhere,
+      copied from the document analysis proof of concept along with unused langchain,
+      pdf2json, xlsx and aws-sdk dependencies. Re-checked at 41776ca8: both keys were
+      deleted from src/config/config.js on 19 Oct 2026 (with BACKEND_API_URL,
+      ANALYSIS_TYPE_MAPPING and AQIE_PASSWORD) and the packages were removed from
+      package.json on 5 and 29 Oct. There is still no upload route, multipart handler or
+      file input. The only remnants are stale ignore globs for src/server/cdp-uploader/
+      and src/server/utils/xlsxParser.js in jest.config.js and sonar-project.properties.
+    checked_at_utc: "2026-11-19T00:00:00Z"
 
   - claim: "aqie-maps-frontend -> aqie-back-end GET /measurements"
     verdict: refuted
-    reason: "Full-text search of src/ (excluding tests) returns no call site."
-    checked_at_utc: "2026-09-15T00:00:00Z"
+    reason: >-
+      Full-text search of the repository (tests included) at 13a9eb7f finds no
+      /measurements path. The only "measurements" token in non-test source is the property
+      name read from the /aurnData response (src/client/javascripts/map-station-data.js,
+      line 188).
+    checked_at_utc: "2026-11-19T00:00:00Z"
 
   - claim: "aqie-dc-backend -> GOV.UK Notify or aqie-notify-service"
     verdict: refuted
-    reason: "No Notify dependency, no NOTIFY_* variable and no outbound URL in the repository."
-    checked_at_utc: "2026-09-15T00:00:00Z"
+    reason: >-
+      No Notify dependency, no NOTIFY_* variable and no outbound URL in the repository.
+      Re-checked at 49f950cd: the planned email to the devolved administrations is only a
+      log-line stub, so a Notify edge could appear later (oq-024).
+    checked_at_utc: "2026-11-19T00:00:00Z"
 
   - claim: "aqie-dc-backend as an SQS producer"
     verdict: refuted
-    reason: "The service only receives and deletes messages. No SendMessageCommand exists."
-    checked_at_utc: "2026-09-15T00:00:00Z"
+    reason: "The service only receives and deletes messages. No SendMessageCommand exists (re-checked at 49f950cd)."
+    checked_at_utc: "2026-11-19T00:00:00Z"
 
   - claim: "aqie-kpi-metrics-dashboard -> any AQIE data source"
     verdict: refuted
@@ -1515,13 +2680,94 @@ refuted_edges:
       No API client and no database.
     checked_at_utc: "2026-09-15T00:00:00Z"
 
+  - claim: "aqie-back-end -> GOV.UK Notify"
+    verdict: refuted
+    reason: >-
+      NOTIFY_BASE_URL (config key alertNotifucationUrl, src/config/index.js lines 235-240)
+      is declared with the Notify host as its default, but no source file reads the key
+      and package.json has no Notify client. Dead configuration inherited from the shared
+      template. Notification delivery belongs to aqie-notify-service. Checked at
+      77a030c3; answers oq-001.
+    checked_at_utc: "2026-11-19T00:00:00Z"
+
+  - claim: "aqie-maps-frontend -> aqie-monitoringstation-backend (any endpoint, including GET /monitoringstation/by-location)"
+    verdict: refuted
+    reason: >-
+      No address setting, no HTTP client and no call site for it exists in
+      aqie-maps-frontend at 13a9eb7f. The map's only AQIE upstreams are aqie-back-end and
+      aqie-forecast-api. The edge is asserted in the aqie-monitoringstation-backend README
+      and in code comments ("deep links from other services, e.g. aqie-maps-frontend"); the
+      actual caller of the by-location lookup is aqie-dataselector-frontend, reached by a
+      browser form post from the map to the dataselector's POST /station-summary
+      (src/client/javascripts/map-station-panel.js). aqie-maps-frontend also makes no call
+      to aqie-location-backend.
+    checked_at_utc: "2026-11-19T00:00:00Z"
+
+  - claim: "aqie-prtr-submissions-frontend -> aqie-prtr-submissions-backend"
+    verdict: refuted
+    reason: >-
+      The frontend has no backend URL setting, no HTTP client and no outbound call to any
+      service. The backend serves only /health and the template /example routes. Neither
+      repository mentions the other. Both are CDP templates with only tooling and
+      (frontend) language-support changes.
+    checked_at_utc: "2026-11-19T00:00:00Z"
+
+  - claim: "aqie-prtr-submissions-frontend or aqie-prtr-submissions-backend <-> aqie-prtr-backend or aqie-prtr-frontend (either direction)"
+    verdict: refuted
+    reason: >-
+      None of the four repositories names, configures or calls any other. The new backend
+      has no S3 configuration at all (so no shared bucket), its default database is named
+      after itself rather than aqie-prtr-backend, and the frontend session cache is
+      prefixed with its own service name. The only link is the shared aqie-prtr- name.
+    checked_at_utc: "2026-11-19T00:00:00Z"
+
+  - claim: "aqie-prtr-submissions-frontend or aqie-prtr-submissions-backend -> CDP Uploader, GOV.UK Notify, an identity or sign-in provider, S3 or SQS"
+    verdict: refuted
+    reason: >-
+      No uploader, Notify, sign-in, S3 or SQS setting or call site exists in either
+      repository on main. The only AWS-looking items are unused template dependencies
+      (@aws-sdk/credential-providers and aws4 in the backend) and commented-out resource
+      stubs in the template Compose scripts.
+    checked_at_utc: "2026-11-19T00:00:00Z"
+
+  - claim: "aqie-location-backend -> postcodes.io"
+    verdict: refuted
+    reason: >-
+      No reference to postcodes.io anywhere in the repository. The only outbound HTTP call
+      in non-test source is the Ordnance Survey Names lookup. Checked at 5f1beb5f.
+    checked_at_utc: "2026-11-19T00:00:00Z"
+
+  - claim: "aqie-front-end -> UK-AIR website GET /ajax/forecast_text_summary.php"
+    verdict: refuted
+    reason: >-
+      FORECAST_SUMMARY_URL is defined in src/config/index.js (the default points at the
+      UK-AIR site) but is read nowhere in non-test source, at the previous analysis and at
+      210c0c03. The national forecast narrative comes from the forecast-summary field of
+      the aqie-forecast-api /forecast response (src/server/locations/helpers/fetch-data.js,
+      extractDailySummary).
+    checked_at_utc: "2026-11-19T00:00:00Z"
+
+  - claim: "aqie-front-end -> postcodes.io GET /postcodes?q= (Northern Ireland fallback)"
+    verdict: refuted
+    reason: >-
+      POSTCODE_NORTHERN_IRELAND_URL (src/config/schema-extra.js, lines 241-246) is read
+      nowhere in non-test source. The Northern Ireland lookup builds its URL from
+      OS_PLACES_POSTCODE_NORTHERN_IRELAND_URL with an Entra ID bearer token
+      (src/server/locations/helpers/get-ni-places.js, lines 48-68). Checked at 210c0c03.
+    checked_at_utc: "2026-11-19T00:00:00Z"
+
 # ---------------------------------------------------------------------------
 # Known gaps requiring owner confirmation
 # ---------------------------------------------------------------------------
 open_questions:
   - id: oq-001
     question: "Does aqie-back-end still send notifications directly, or is this fully delegated to aqie-notify-service?"
-    affects: ["back-end__govuk-notify"]
+    status: >-
+      Answered 2026-11-19 — neither. aqie-back-end has no notification code: NOTIFY_BASE_URL
+      (config key alertNotifucationUrl) is declared but never read, and package.json has no
+      GOV.UK Notify client (checked at 77a030c3). The edge is recorded under refuted_edges.
+      The variable is vestigial template configuration and can be deleted.
+    affects: ["refuted: aqie-back-end -> GOV.UK Notify"]
   - id: oq-002
     question: "Which pipeline populates aqie-historicaldata-backend with source measurement data?"
     status: >-
@@ -1552,11 +2798,22 @@ open_questions:
       Is the public smoke control register currently broken? aqie-dc-frontend calls
       /get-all/{type} and /get/{type}/{id}, neither of which aqie-dc-backend serves
       on main.
+    status: >-
+      Still open, unchanged. Re-confirmed 2026-11-19 at aqie-dc-backend 49f950cd and
+      aqie-dc-frontend 0100dc25 (unchanged since 2026-04-21). The backend still registers
+      neither route, and the shapes differ (the appliance summary carries permittedFuels
+      where the frontend reads fuels), so a fix needs both a route change and a
+      response-shape change. The backend's public lists now return live items only, which
+      suggests it is being shaped for a public frontend (see oq-026).
     severity: high
     affects: ["dc-frontend__dc-backend"]
   - id: oq-007
     question: "Who operates the LAQM Portal API, and what is the data-sharing basis for the AQIE partner credentials?"
-    affects: ["laqm-data-explorer__laqm-portal", "dataselector-frontend__laqm-portal"]
+    status: >-
+      Still open, widened 2026-11-19. aqie-historicaldata-backend also holds LAQM partner
+      credentials (LAQM_API_KEY, LAQM_USERID), so three services now use the portal under
+      the same arrangement.
+    affects: ["laqm-data-explorer__laqm-portal", "dataselector-frontend__laqm-portal", "historicaldata-backend__laqm-portal"]
   - id: oq-008
     question: "Is OpenFreeMap acceptable as a production dependency for citizen-facing maps?"
     affects: ["maps-frontend__openfreemap"]
@@ -1564,11 +2821,29 @@ open_questions:
     question: >-
       Is GET or POST correct for /osnameplaces and /monitoringstation? Service
       config and performance test plans disagree.
+    status: >-
+      Answered — POST. At the pinned HEADs aqie-location-backend registers only
+      POST /osnameplaces, and aqie-monitoringstation-backend registers POST
+      /monitoringstation (plus a leftover GET /osnameplaces and the new
+      GET /monitoringstation/by-location). Its callers (aqie-monitoringstation-backend,
+      aqie-dataselector-frontend and aqie-prtr-backend) all use POST with a JSON body. The
+      GET path-parameter forms (/monitoringstation/location=... and
+      /osnameplaces/userLocation=...) were replaced under ticket aqd-727 in August 2025.
+      The performance test plans still use them and would return 404, and the perf-test
+      OSPlace_API_URL still carries the old path per CDP environment configuration.
     affects: ["monitoringstation-backend__location-backend", "dataselector-frontend__location-backend"]
   - id: oq-010
     question: >-
       Who produces and uploads the annual uk_prtr_dataset_<year>.xml files to S3,
       and who runs the manual TSV ingest that populates the PRTR facility data?
+    status: >-
+      Partly answered 2026-11-19. The files reach S3 through the CDP Uploader (the
+      encodedfilename metadata key that aqie-prtr-backend matches is written by that
+      uploader, and its object keys are uploadId/fileId pairs), and the TSV ingest is
+      described in its own code as a one-shot migration. Still unknown: which service or
+      person initiates the uploads (no PRTR repository on main calls the uploader), who
+      produces the XML, whether the TSV ingest has been run since the first load, and how
+      a new reporting year (2025 is listed but not live) will reach the register.
     affects: ["prtr-backend__s3"]
   - id: oq-011
     question: >-
@@ -1580,24 +2855,317 @@ open_questions:
   - id: oq-012
     question: >-
       Which Ricardo host is authoritative for production? aqie-back-end defaults to
-      uk-air-api.staging.rcdo.co.uk while aqie-alert-back-end-service defaults to
+      uk-air-api.staging.rcdo.co.uk, while aqie-alert-back-end-service,
+      aqie-historicaldata-backend and aqie-demo-data-visualisations use
       api-ukair.defra.gov.uk.
-    severity: high
-    affects: ["back-end__ricardo", "alert-backend__ricardo"]
+    status: >-
+      Partly answered 2026-11-19, and the earlier reading is reversed. For aqie-back-end the
+      answer is the production host: per CDP environment configuration all four Ricardo URL
+      variables are set in the service-wide defaults, none is overridden in any environment
+      file, none points at the supplier's staging host, and each resolves to the host
+      documented in the repository's .env.example. A secret of the same name would override
+      these and cannot be seen from that configuration. The staging host survives as a code
+      default (src/config/index.js, lines 266-290), so removing a variable would silently
+      select staging; the fix is to make the four URLs required. The earlier documentation
+      said production did not override the defaults, which was wrong. aqie-historicaldata-backend
+      fixes the production host in code with no override (so it would not follow a change of
+      host in configuration), and aqie-demo-data-visualisations defaults to it. The
+      configuration of aqie-alert-back-end-service was not re-read this cycle.
+    severity: low
+    affects: ["back-end__ricardo", "alert-backend__ricardo", "historicaldata-backend__ricardo", "demo-visualisations__ricardo"]
   - id: oq-013
     question: >-
       Does aqie-front-end have a sixth outbound edge via SUBSCRIPTION_API_BASE_URL?
       It has no default and the feature is off by default.
+    status: >-
+      Answered 2026-11-19 for the deployed estate; the code path exists. aqie-front-end can
+      post a captured email address or mobile number to a configurable service
+      (POST /capture/email and /capture/sms) when SUBSCRIPTION_API_ENABLED is true and
+      SUBSCRIPTION_API_BASE_URL is not empty. Per CDP environment configuration,
+      SUBSCRIPTION_API_ENABLED, SUBSCRIPTION_API_BASE_URL, SUBSCRIPTION_API_KEY,
+      SUBSCRIPTION_API_EMAIL_PATH and SUBSCRIPTION_API_SMS_PATH are unset in every
+      environment's app config, so the code defaults apply (disabled, no base URL) everywhere;
+      secrets are held separately and were not visible. No AQIE service exposes /capture/*.
+      So there is no sixth edge in the deployed estate. The owner can delete the feature or
+      name the intended target.
     affects: ["aqie-front-end"]
   - id: oq-014
     question: >-
-      Does aqie-monitoringstation-backend call /monitoringStationInfo or /measurements
-      in each environment? The endpoint is supplied by the overridable RICARDO_API_URL
-      variable and the alternative is present but commented out in source.
+      Does aqie-monitoringstation-backend still resolve RICARDO_API_URL to
+      /monitoringStationInfo in every environment? The /measurements alternative has now
+      been decommissioned, so any environment still pointing at it is broken.
+    status: >-
+      Answered — yes. Every default and code path in aqie-monitoringstation-backend
+      ad63bb7 targets aqie-back-end GET /monitoringStationInfo; the only /measurements
+      string left is a commented-out default. RICARDO_API_URL is not set in any
+      environment per CDP environment configuration, so the code default applies. A stale
+      MEASUREMENTS_API_URL pointing at /measurements is still set per CDP environment
+      configuration but has not been read since 2026-03-16; it should be retired.
+      Residual risk is low.
     affects: ["monitoringstation-backend__back-end"]
   - id: oq-015
     question: >-
       aqie-front-end is configured with a getSubscriptionsPath of /api/subscriptions
       against the alert backend, but no such route exists there. Is this dead config or
       a missing endpoint?
+    status: >-
+      Changed 2026-11-19; still open and narrower. It is a live call, not dead configuration.
+      In the SMS journey only, aqie-front-end requests
+      GET {ALERT_BACKEND_BASE_URL}/api/subscriptions/{phone}?alertType=sms to count a phone
+      number's subscriptions. The alert backend at e6ff1414 (unchanged since 2026-08-10)
+      registers only /health, /setup-alert, /opt-out-sms-alert, /opt-out-email-alert,
+      /aqsr-alert, /daqi-alert and the template /example routes, so the call cannot succeed.
+      The front end treats any reply other than 200 or 400 as unexpected and fails open, so
+      the SMS journey skips the maximum-locations check at that step. Per CDP environment
+      configuration NOTIFY_ENABLED is true in every environment, ALERT_BACKEND_BASE_URL and
+      NOTIFY_BASE_URL are set everywhere, and NOTIFY_GET_SUBSCRIPTIONS_PATH is unset
+      everywhere, so the default path is the one called. The email journey skips the call;
+      its code comments say the limit of five is enforced when POST /setup-alert returns 400.
+      Remaining question for the owners: add the missing route to the alert backend, or
+      remove the SMS call and rely on the 400, as the email journey does?
+    severity: medium
     affects: ["front-end__alert-backend"]
+  - id: oq-016
+    question: >-
+      Should the USE_NEW_RICARDO_MEASUREMENTS_ENABLED flag, the MEASUREMENTS_API_URL
+      variable and the dead branch that reads it be retired from aqie-front-end, now that
+      the /measurements endpoint they refer to has been removed?
+    status: >-
+      Answered 2026-11-19 and reframed: the flag is vestigial, not a broken rollback path.
+      The old URL cannot be reached at runtime. The English journey hard-codes the new
+      source and the shared fetch forces it for any non-boolean argument; the flag only
+      selects the response parser in the Welsh journey. Setting it false would not call the
+      removed endpoint, but by reading the code (not run) it would hand the new response to
+      the legacy parser and most likely fail the Welsh location page with an HTTP 500.
+      Per CDP environment configuration the flag is true in every environment (set
+      explicitly), and MEASUREMENTS_API_URL and NEW_RICARDO_MEASUREMENTS_API_URL are both
+      set in every environment, so production uses the new source. Yes, it can be
+      retired: delete the flag, MEASUREMENTS_API_URL, buildOldMeasurementsSelection,
+      fetchLegacyNearestLocationsRange and the unused fetch-data-core-helpers.js, and
+      remove the variable from the platform configuration. Not yet done at 210c0c03.
+    severity: low
+    affects: ["front-end__back-end"]
+  - id: oq-017
+    question: >-
+      aqie-maps-frontend falls back to aqie-back-end GET /forecasts when
+      AQIE_FORECAST_API_URL is unset. That endpoint has been removed. Is the fallback
+      reachable in any deployed environment, and should it be deleted?
+    status: >-
+      Partly answered 2026-11-19. Not reachable: per CDP environment configuration
+      AQIE_FORECAST_API_URL is set in every environment the service is deployed to. It
+      should still be deleted, because the dead fallback is in code at 13a9eb7f
+      (src/server/common/helpers/aqie-forecast-api.js, line 12). Related and open: the
+      forecast view has no controls in the page templates (the tab was hidden on purpose
+      until the design is ready) yet /api/forecasts is fetched on every map load; if the
+      forecast view is not returning, removing that fetch settles this question too.
+    severity: low
+    affects: ["maps-frontend__back-end"]
+  - id: oq-018
+    question: >-
+      As raised on 2026-09-23: aqie-demo-data-visualisations still called the removed
+      /measurements endpoint and was the only publisher-consumer of the feature-of-interest
+      mapping, which /monitoringStationInfo does not provide. Is the repository still in
+      use, and if so what replaces that mapping?
+    status: >-
+      Answered 2026-11-19. The demo no longer calls /measurements or any aqie-back-end
+      endpoint. PR #15 (merged 2026-10-07) removed that client and the Sensor Observation
+      Service client, and the demo now reads the Ricardo UK-AIR API directly with its own
+      credentials (demo-visualisations__ricardo). The feature-of-interest mapping is no
+      longer needed, so nothing replaces it, and the repository is still being changed.
+      Per CDP environment configuration, in the dev environment the three
+      RICARDO_API_*_URL variables are set, AQIE_BACK_END_URL is still set but read nowhere,
+      and SOS_URL is unset. Whose Ricardo account the demo uses is raised as oq-039.
+    affects: ["demo-visualisations__ricardo"]
+  - id: oq-019
+    question: >-
+      pollutantsScheduler and forecastScheduler are registered in aqie-back-end
+      (src/api/server.js) and still write measurements and forecasts (rewritten in place,
+      bounded) and historicalMeasurements and historicalForecasts (insert-only, no TTL),
+      but nothing has read any of them since PR #163. Should the schedulers and the four
+      collections be retired, and is there a retention policy? Twelve other modules import
+      constants from src/api/pollutants/helpers/common/, which must stay or move first.
+    status: "Still open; premise re-confirmed 2026-11-19 at 77a030c3."
+    severity: medium
+    affects: ["back-end__defra-sos", "back-end__ukair-website"]
+
+  # --- Raised in the review of 2026-11-19 -----------------------------------
+  - id: oq-020
+    question: >-
+      Is SSO_ENABLED true (or unset) and SESSION_COOKIE_PASSWORD set from a secret in every
+      deployed environment of aqie-dc-admin-frontend? The source cannot say. With
+      SSO_ENABLED=false every request is authenticated as a stub user with no sign-in, and
+      an unset cookie password falls back to a committed placeholder (security findings 39
+      and 40).
+    severity: high
+    affects: ["dc-admin-frontend__azure-entra"]
+  - id: oq-021
+    question: >-
+      What is the intended access model for aqie-dc-admin-frontend? Any account in the
+      tenant that can sign in is accepted and no group or role claim is checked. Is
+      "assignment required" set on the Entra app registration, or should the service check
+      a group or app role?
+    severity: medium
+    affects: ["dc-admin-frontend__azure-entra"]
+  - id: oq-022
+    question: >-
+      Does a CDP gateway or another control validate the x-api-key that aqie-dc-frontend
+      and aqie-dc-admin-frontend send to aqie-dc-backend? The backend never reads it and
+      registers no authentication strategy, so without such a control every PATCH,
+      including review decisions and certification, is open to any caller on the internal
+      network (security findings 16, 18 and 41).
+    severity: high
+    affects: ["dc-admin-frontend__dc-backend", "dc-frontend__dc-backend"]
+  - id: oq-023
+    question: >-
+      The multifuel change page in aqie-dc-admin-frontend sends multifuelAppliance, but the
+      aqie-dc-backend field is isMultifuelAppliance and PATCH rejects unknown keys. Is the
+      page known to fail?
+    severity: medium
+    affects: ["dc-admin-frontend__dc-backend"]
+  - id: oq-024
+    question: >-
+      How will the devolved administrations be asked to decide on an application? The email
+      step in aqie-dc-backend is a log-line stub, yet completing an application records
+      "Sent to governments for approval" in the action history (security finding 44). If
+      GOV.UK Notify or aqie-notify-service is intended, the refuted edge would become real.
+    severity: medium
+    affects: ["refuted: aqie-dc-backend -> GOV.UK Notify or aqie-notify-service"]
+  - id: oq-025
+    question: >-
+      Is the web import flow in aqie-dc-backend meant to be retired? The upload callback
+      and the S3 read were removed in PR #123, but initiate, status and the upload proxy
+      remain and still register a callback URL that no longer exists. Who uses
+      /admin/import/*?
+    severity: medium
+    affects: ["dc-backend__cdp-uploader"]
+  - id: oq-026
+    question: >-
+      How does a fuel become live in aqie-dc-backend? No fuel certification or visibility
+      route exists, so the public fuel list may always be empty.
+    severity: medium
+    affects: ["dc-frontend__dc-backend"]
+  - id: oq-027
+    question: >-
+      Queue configuration and dead-letter handling for the smoke control application queue.
+      The endpoint variable was renamed (AWS_SQS_ENDPOINT, with a LocalStack default), so
+      is every environment updated? The poll interval default is now 15 minutes (was 5),
+      and failed messages stay on the queue: is there a redrive policy, a dead-letter
+      queue or an alert?
+    severity: medium
+    affects: ["defra-forms__dc-backend"]
+  - id: oq-028
+    question: >-
+      Is HTTP 400 intended for upstream failures in aqie-monitoringstation-backend (since
+      PR #51)? The dataselector search page treats any failure as "no stations" while the
+      location page shows a 500, and an unmatched place probably also returns 400 with an
+      internal error message (security finding 63).
+    severity: medium
+    affects: ["monitoringstation-backend__back-end", "dataselector-frontend__monitoringstation-backend"]
+  - id: oq-029
+    question: >-
+      The aqie-back-end README says Ricardo ignores start-date-time and end-date-time and
+      falls back to the latest measurement, but the AURN job and /monitoringStationInfo
+      send exactly those parameters. If the README is right, the 75% capture rule added in
+      PR #165 can never be met for PM2.5, PM10 and O3, and the map DAQI silently excludes
+      them. Which is true? (aqie-demo-data-visualisations makes the same claim in its own
+      notes and uses start-date and end-date.)
+    severity: medium
+    affects: ["back-end__ricardo"]
+  - id: oq-030
+    question: >-
+      A station that stops meeting the capture rule is skipped on every run and its old
+      aurnMeasurements document is never updated or removed, so /aurnData keeps serving an
+      old DAQI with only updatedAt as the signal. Is that intended? The only consumer,
+      aqie-maps-frontend, reads neither updatedAt nor measuredAt, so a citizen sees the old
+      index as current.
+    severity: medium
+    affects: ["maps-frontend__back-end"]
+  - id: oq-031
+    question: >-
+      Has Ricardo agreed the request-time load from aqie-back-end? /monitoringStationInfo
+      makes 1 + 5N calls per request and /monitoringStationHistory five per cache miss,
+      with no timeout, retry or rate limit, and the Ricardo token is cached only in a
+      session cookie, so server-to-server callers re-authenticate on every request.
+    severity: medium
+    affects: ["back-end__ricardo-live"]
+  - id: oq-032
+    question: >-
+      What is the intended relationship of aqie-prtr-submissions-frontend and
+      aqie-prtr-submissions-backend to the existing pollutant release register? Both are
+      unconnected template scaffolds on main. Who will submit data, how will they sign in,
+      will the frontend call the backend, is either deployed anywhere, and when is a first
+      release planned (security finding 67)?
+    severity: medium
+    affects: ["aqie-prtr-submissions-frontend", "aqie-prtr-submissions-backend"]
+  - id: oq-033
+    question: >-
+      Two repositories sit outside the "aqie in:name" discovery filter. prtr-contacts-backend
+      (created 2026-11-16, an unmodified CDP Node backend template in the same pollutant
+      release domain) and aiqe-dataservice-test (a typo-named public journey-test
+      repository, created 2024-11-25 and still being pushed to, with tests that exercise
+      aqie-maps-frontend) are not in this documentation set. What are their roles, and
+      should they join the estate?
+    severity: low
+    affects: ["estate discovery"]
+  - id: oq-034
+    question: >-
+      Which expiry period is the policy for the emailed download link, and where should it
+      be enforced? The 48-hour rule shown to citizens is checked only in
+      aqie-dataselector-frontend, against a timestamp in the link that is not signed, while
+      aqie-historicaldata-backend issues a fresh pre-signed URL with a seven-day expiry for
+      any known job reference and has no age check (security finding 56).
+    status: >-
+      Partly answered 2026-11-19. The link is built by aqie-historicaldata-backend: the
+      configured EMAIL_BASEADDRESS plus the job id and the job's creation time in Unix
+      milliseconds, passed to aqie-notify-service as the link personalisation of the email
+      template (checked at 73a763ab). The base address is deployed configuration, so it is
+      assumed to point at the aqie-dataselector-frontend page /download_emailreq/{id}/{timestamp},
+      the only route that matches. The timestamp is not signed. An earlier reading that the
+      builder was not in either repository was wrong.
+    severity: medium
+    affects: ["dataselector-frontend__historicaldata-backend", "historicaldata-backend__notify-service"]
+  - id: oq-035
+    question: >-
+      Both cross-links between aqie-maps-frontend and aqie-dataselector-frontend use
+      configured addresses as browser form or link targets (DATASELECTOR_FRONT_END_URL, and
+      MAPS_FRONT_END_URL, whose built-in default is a CDP-internal address). Are the
+      configured addresses reachable from a citizen's browser, or only from the internal
+      network? If not, both cross-links fail for citizens.
+    severity: medium
+    affects: ["maps-frontend__dataselector-frontend", "dataselector-frontend__maps-frontend"]
+  - id: oq-036
+    question: >-
+      The partial-postcode rule in aqie-location-backend (a postcode district collapsed to
+      one best match, rewriting NAME1) appears to be dead code. The length comparison reads
+      a constant from a module that does not define it, so the branch never runs, and the
+      unit test hides this by mocking the module. Is the rule still wanted, and do any
+      callers depend on the rewritten name?
+    severity: medium
+    affects: ["dataselector-frontend__location-backend", "monitoringstation-backend__location-backend", "prtr-backend__location-backend"]
+  - id: oq-037
+    question: >-
+      Has the CDP gateway key held in the Postman collection variable cdpXApiKey in
+      aqie-front-end (src/server/notify/postman-collection-sms-alert-api.json) expired or
+      been revoked? Do the three committed Postman collections hold real people's mobile
+      numbers and corporate email addresses, and did those people consent (security
+      findings 71 and 74)?
+    severity: high
+    affects: ["aqie-front-end"]
+  - id: oq-038
+    question: >-
+      Is it acceptable that anyone who knows an email address can unsubscribe it? The link
+      in every alert email carries the plain address and the receiving route in
+      aqie-front-end validates no token or signature, while a signed-link helper exists
+      unused in the front end's notify-util folder. Who will change the link builder
+      (aqie-alert-back-end-service) and the receiving routes (aqie-front-end)? Security
+      finding 72.
+    severity: medium
+    affects: ["alert-backend__front-end", "front-end__alert-backend"]
+  - id: oq-039
+    question: >-
+      Is the Ricardo account that aqie-demo-data-visualisations now logs in with a
+      dedicated, read-only account, who owns it, and is the committed PASSWORD value in the
+      repository's .env.template a placeholder or the deployed basic-authentication
+      password (security findings 76 and 80)?
+    severity: medium
+    affects: ["demo-visualisations__ricardo"]

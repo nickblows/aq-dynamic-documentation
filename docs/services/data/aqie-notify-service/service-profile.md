@@ -2,8 +2,8 @@
 
 > The messaging edge of the alerts estate. It is the only service that holds a GOV.UK Notify
 > API key: it verifies a citizen's mobile number or email address before they subscribe, sends
-> every SMS and email on behalf of `aqie-alert-back-end-service`, and processes inbound STOP
-> replies.
+> every SMS and email on behalf of `aqie-alert-back-end-service` and the extract download email
+> on behalf of `aqie-historicaldata-backend`, and processes inbound STOP replies.
 
 ## 1. Service Metadata
 
@@ -35,8 +35,9 @@
 - Returns the verified subscription details (email, channel, location, coordinates) when the
   link is validated, so the front end can complete the subscription.
 - Sends any message on request through `POST /send-notification` — the delivery path used by
-  every alert that `aqie-alert-back-end-service` generates — and records the returned Notify
-  notification id against the originating alert id.
+  every alert that `aqie-alert-back-end-service` generates, and by `aqie-historicaldata-backend`
+  to email a download link — and records the returned Notify notification id, with the alert
+  id when the caller supplies one.
 - Polls GOV.UK Notify for inbound SMS replies on a timer, treats a message of `STOP` as an
   unsubscribe, calls the alert backend to remove the subscriber, sends a confirmation SMS, and
   records every reply so it is processed exactly once.
@@ -100,9 +101,6 @@ entirely by configuration.
 | `aqie-front-end` | AQIE service | Link construction only — `/notify/register/email-confirm-link?token=` | Verification token carried in the emailed link | Tokenised link |
 | MongoDB | Datastore | Driver connection | Verification secrets, inbound SMS history, notification audit | `MONGO_URI` |
 
-> The verification-link edge to `aqie-front-end` is **not** yet recorded in
-> [`/docs/integration-catalog.yaml`](../../../integration-catalog.yaml) — see Section 11.
-
 ## 6. Consumed By (Inbound Dependencies)
 
 | Consumer | Endpoint used | Data exchanged |
@@ -110,9 +108,9 @@ entirely by configuration.
 | `aqie-alert-back-end-service` | `POST /send-notification` | Recipient, Notify template id, personalisation and originating alert id |
 | `aqie-front-end` | `POST /subscribe/generate-otp`, `POST /subscribe/validate-otp` | Mobile number and passcode during the SMS subscription journey |
 | `aqie-front-end` | `POST /subscribe/generate-link`, `GET /subscribe/validate-link/{uuid}` | Email address and pending subscription details during the email subscription journey |
+| `aqie-historicaldata-backend` | `POST /send-notification` | Recipient email address, Notify template id and the download link as personalisation, to email a citizen the link to a completed extract |
 
 > Edges are mastered in [`/docs/integration-catalog.yaml`](../../../integration-catalog.yaml).
-> Neither inbound edge above is currently recorded there — see Section 11.
 
 ## 7. Data
 
@@ -186,13 +184,6 @@ Environment variable **names** only — values are held in CDP secrets and never
 
 ## 11. Open Questions
 
-- [ ] **Catalogue gap:** `aqie-front-end → aqie-notify-service` (the four `/subscribe/*`
-      endpoints) is evidenced but not in `docs/integration-catalog.yaml`.
-- [ ] **Catalogue gap:** `aqie-alert-back-end-service → aqie-notify-service`
-      (`POST /send-notification`) is evidenced but not in the catalogue.
-- [ ] **Catalogue gap:** the emailed verification link points at `aqie-front-end`
-      (`/notify/register/email-confirm-link`), an outbound-link edge equivalent to the one
-      already recorded for the alert backend.
 - [ ] `GET /process-sms-replies` triggers the poller with no authentication and no rate
       limiting. Confirm it is reachable only inside the CDP network.
 - [ ] `POST /send-notification` accepts any template id from any caller on the internal
@@ -201,6 +192,6 @@ Environment variable **names** only — values are held in CDP secrets and never
       removed.
 - [ ] Confirm the retention and deletion policy for `sms_replies`, which stores full inbound
       message content and sender numbers, and for `user-notification-details`.
-- [ ] Activity status is `Monitoring` in the repository catalogue while the alert backend is
-      `Active` and depends on this service for every message. Confirm ownership and support
+- [ ] Activity status is `Monitoring` in the repository catalogue, as it is for the alert
+      backend, which depends on this service for every message. Confirm ownership and support
       arrangements. (catalogue `oq-005`)

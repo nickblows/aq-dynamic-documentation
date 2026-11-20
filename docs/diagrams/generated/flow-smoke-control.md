@@ -4,9 +4,9 @@
 
 # Smoke control: appliance and fuel applications
 
-_Generated 2026-09-15T13:13:57Z from `/docs/integration-catalog.yaml`._
+_Generated 2026-11-19T20:10:05Z from `/docs/integration-catalog.yaml`._
 
-Applications arrive asynchronously from DEFRA Forms over SQS, not through the AQIE frontend. The public frontend is read-only search; the admin frontend is the caseworker review interface.
+Applications arrive asynchronously from DEFRA Forms over SQS, not through the AQIE frontend. The admin frontend is the caseworker review and certification interface and requires sign-in on every route. The public frontend calls routes the backend does not serve, so the public register may currently be broken (oq-006). The CDP Uploader import flow in the backend no longer completes, because its callback has been removed (oq-025).
 
 ```mermaid
 sequenceDiagram
@@ -15,24 +15,21 @@ sequenceDiagram
   participant defra_forms as defra-forms
   participant aqie_dc_backend as aqie-dc-backend
   participant MongoDB as MongoDB
-  participant cdp_uploader as cdp-uploader
-  participant AWS_S3 as AWS S3
   actor Caseworker as Caseworker
   participant aqie_dc_admin_frontend as aqie-dc-admin-frontend
   participant azure_entra as azure-entra
   actor Citizen as Citizen
   participant aqie_dc_frontend as aqie-dc-frontend
-  Applicant->>defra_forms: Complete the smoke control application form
+  Applicant->>defra_forms: Complete the appliance or fuel application form
   defra_forms->>aqie_dc_backend: SQS message on aqie-dc-queue
-  aqie_dc_backend->>aqie_dc_backend: Long-poll every 5 min, map form fields, split repeaters
-  aqie_dc_backend->>MongoDB: Create application and appliance or fuel records
-  aqie_dc_backend->>cdp_uploader: POST /initiate then /upload-and-scan/{uploadId}
-  cdp_uploader->>aqie_dc_backend: POST /upload-callback — scan outcome with bucket and key
-  aqie_dc_backend->>AWS_S3: Read scanned evidence
+  aqie_dc_backend->>aqie_dc_backend: Long-poll (default every 15 min), store the message, map form fields, split repeaters
+  aqie_dc_backend->>MongoDB: Create application and appliance or fuel records, delete the message once handled
   Caseworker->>aqie_dc_admin_frontend: Sign in
   aqie_dc_admin_frontend->>azure_entra: OIDC authorisation code flow
-  aqie_dc_admin_frontend->>aqie_dc_backend: Retrieve application case records
-  aqie_dc_admin_frontend->>aqie_dc_backend: PATCH /appliances/{id}/technical-review
+  aqie_dc_admin_frontend->>aqie_dc_backend: GET /applications/summary-by-status — read applications and items
+  aqie_dc_admin_frontend->>aqie_dc_backend: PATCH .../technical-review and .../checks — record review decisions
+  aqie_dc_admin_frontend->>aqie_dc_backend: PATCH /applications/{id}/complete — complete the application
+  aqie_dc_admin_frontend->>aqie_dc_backend: PATCH /appliances/{id}/certification/{country} and /visibility — publish decisions
   Citizen->>aqie_dc_frontend: Search the published register
-  aqie_dc_frontend->>aqie_dc_backend: GET /get-all/{type}, GET /get/{type}/{id}
+  aqie_dc_frontend->>aqie_dc_backend: GET /get-all/{type}, GET /get/{type}/{id} — not served (oq-006)
 ```

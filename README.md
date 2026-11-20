@@ -17,9 +17,11 @@ Dynamic documentation library for Air Quality services.
 - [Conventions and Metadata](#conventions-and-metadata)
 
 > **Note:** documentation in this repository is derived from analysis of public `main`
-> branches. It has not yet been reviewed by service owners. Open questions are tracked in
-> [`/docs/integration-catalog.yaml`](docs/integration-catalog.yaml) and findings requiring
-> urgent attention are in [`/docs/audit/security-findings.md`](docs/audit/security-findings.md).
+> branches. It has not yet been reviewed by service owners. A small number of statements come
+> from private deployment configuration; each is limited to variable names and set, unset or
+> true/false states, and is tagged `per CDP environment configuration`. Open questions are
+> tracked in [`/docs/integration-catalog.yaml`](docs/integration-catalog.yaml) and findings
+> requiring urgent attention are in [`/docs/audit/security-findings.md`](docs/audit/security-findings.md).
 
 ## Quick Links
 
@@ -34,17 +36,18 @@ Dynamic documentation library for Air Quality services.
 
 ## Service Summary
 
-This repository documents the AQIE Air Quality service estate: 39 repositories across the
+This repository documents the AQIE Air Quality service estate: 41 repositories across the
 Citizen, Data and Shared domains, with a service profile for every one covering purpose,
-architecture, API surface, integrations, data stores, configuration and hosting.
+architecture, API surface, integrations, data stores, configuration and hosting. The whole
+set was last reconciled with the default branches on 2026-11-19.
 
 | Measure | Value |
 |---|---|
-| Repositories tracked | 39 |
-| Service profiles | 39 |
-| Evidence-backed integrations | 53 |
-| Internal service-to-service edges | 26 |
-| External and platform systems | 16 |
+| Repositories tracked | 41 |
+| Service profiles | 41 |
+| Evidence-backed integrations | 61 |
+| Internal service-to-service edges | 29 |
+| External and platform systems | 17 |
 
 ## Repository Purpose
 
@@ -90,13 +93,15 @@ A curated draw.io poster is also maintained for presentation use:
 |---|---|
 | [`/docs/introduction.md`](docs/introduction.md) | Repository scope and principles |
 | [`/docs/master/system-landscape.md`](docs/master/system-landscape.md) | How the estate fits together, product lines, ingestion routes, structural issues |
+| [`/docs/master/monitoring-station-info-data-flow.md`](docs/master/monitoring-station-info-data-flow.md) | How `/monitoringStationInfo` collects and serves measurement data, and who consumes it |
+| [`/docs/master/measurements-data-flow.md`](docs/master/measurements-data-flow.md) | The decommissioned `/measurements` path, the ingest pipelines that still run behind it, and DAQI banding |
 | [`/docs/integration-catalog.yaml`](docs/integration-catalog.yaml) | **Source of truth** for every integration edge, with evidence |
 | [`/docs/repository-catalog.yaml`](docs/repository-catalog.yaml) | Generated repository metadata |
 | [`/docs/repositories/aqie-repository-inventory.md`](docs/repositories/aqie-repository-inventory.md) | Generated inventory table |
 | [`/docs/services/citizen/overview.md`](docs/services/citizen/overview.md) | Citizen domain index |
 | [`/docs/services/data/overview.md`](docs/services/data/overview.md) | Data domain index |
 | [`/docs/services/shared/overview.md`](docs/services/shared/overview.md) | Test, performance and archived repositories |
-| `/docs/services/<domain>/<service>/service-profile.md` | Full profile per service (39 of these) |
+| `/docs/services/<domain>/<service>/service-profile.md` | Full profile per service (41 of these) |
 | [`/docs/services/_templates/service-profile-template.md`](docs/services/_templates/service-profile-template.md) | Profile template |
 | [`/docs/diagrams/generated/`](docs/diagrams/generated/README.md) | Generated Mermaid diagrams — do not hand-edit |
 | [`/docs/diagrams/drawio-guidelines.md`](docs/diagrams/drawio-guidelines.md) | draw.io poster governance |
@@ -122,7 +127,7 @@ Detailed process: [`/docs/workflows/dynamic-update-workflow.md`](docs/workflows/
 
 | Script | Purpose |
 |---|---|
-| [`/scripts/update_aqie_repository_metadata.py`](scripts/update_aqie_repository_metadata.py) | Discovers AQIE repositories via the GitHub search API and regenerates `/docs/repository-catalog.yaml` and `/docs/repositories/aqie-repository-inventory.md`. Connections are read from the integration catalogue, never guessed from repository names. |
+| [`/scripts/update_aqie_repository_metadata.py`](scripts/update_aqie_repository_metadata.py) | Discovers AQIE repositories via the GitHub search API and regenerates `/docs/repository-catalog.yaml` and `/docs/repositories/aqie-repository-inventory.md`. Connections are read from the integration catalogue, never guessed from repository names. It also prints the repositories whose default branch has moved since the commit recorded in their service profile (the delta check that starts an update cycle). |
 | [`/scripts/generate_diagrams.py`](scripts/generate_diagrams.py) | Regenerates every Mermaid diagram under `/docs/diagrams/generated/` from `/docs/integration-catalog.yaml`. |
 
 Both require `PyYAML`. The metadata script requires `GITHUB_TOKEN` or `DEFRA_READONLY_PAT`.
@@ -149,6 +154,10 @@ Add repository secret:
 - No service source code
 - No credentials, tokens or secret values in committed files — environment variable **names** only
 - Main branch analysis only (ignore feature branch/unmerged work)
+- Private deployment configuration may be read only to resolve an existing open question.
+  Record variable names and set, unset or true/false states only, tag each statement
+  `per CDP environment configuration`, and never record hosts, values or sizing from it
+- Analysts read source and never run it: no installs, builds, tests or services
 - Every integration claim must cite evidence (repository, file, line). Claims without
   evidence are marked `provisional`; claims that were checked and disproved are recorded
   under `refuted_edges` so they are not reintroduced.

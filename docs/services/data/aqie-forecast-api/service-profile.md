@@ -116,8 +116,8 @@ run and releases the lock, because a corrupt file will not fix itself by waiting
 | Consumer | Endpoint used | Data exchanged |
 |---|---|---|
 | `aqie-front-end` | `GET /forecast` | Five-day DAQI forecast and written summary for location pages |
-| `aqie-maps-frontend` | `GET /forecast` | Forecast values overlaid on the map |
-| `aqie-alert-back-end-service` | `GET /forecast` | Forecast DAQI values compared against the alert threshold by the forecast alert scheduler — **not yet in the integration catalogue, see Section 11** |
+| `aqie-maps-frontend` | `GET /forecast` | Forecast values for the map's forecast view. That view is not currently selectable in the maps UI (the tab was hidden pending design), but the fetch still runs on every map load (catalogue `oq-017`) |
+| `aqie-alert-back-end-service` | `GET /forecast` | Forecast DAQI values compared against the alert threshold by the forecast alert scheduler |
 
 > Edges are mastered in [`/docs/integration-catalog.yaml`](../../../integration-catalog.yaml).
 
@@ -186,9 +186,6 @@ Variable names only — values are held in CDP secrets and never recorded here.
 
 ## 11. Open Questions
 
-- [ ] `aqie-alert-back-end-service` calls `GET /forecast` via its `FORECAST_API_URL` setting.
-      This edge is evidenced in code but is **missing from the integration catalogue** and
-      should be added.
 - [ ] The SFTP host and the SFTP username are hardcoded constants in the source rather than
       configuration. Confirm with the owner whether this is intentional and whether the
       account should be moved into CDP configuration.

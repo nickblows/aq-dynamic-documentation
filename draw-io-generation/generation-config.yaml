@@ -1,0 +1,570 @@
+# AQIE draw.io Generation Config
+#
+# Purpose:
+#   Controls which parts of the AQIE estate are written into the description
+#   files that are pasted into next-ai-draw-io
+#   (https://github.com/DayuanJiang/next-ai-draw-io) to generate draw.io diagrams.
+#   One focused prompt file is produced per requested diagram — next-ai-draw-io
+#   produces better results from one diagram per conversation.
+#
+# How to use:
+#   1. Tick the things you want by changing include: "[ ]" to include: "[X]".
+#      "[x]" and "[X]" both count as ticked. Anything else is treated as unticked.
+#   2. Ask the agent to regenerate, e.g. "regenerate the draw.io description files".
+#   3. The agent reads this file first, then builds one prompt file per ticked
+#      diagram from /docs/repository-catalog.yaml, /docs/integration-catalog.yaml
+#      and the per-service profiles under /docs/services/.
+#   4. Paste one prompt file into next-ai-draw-io per conversation and save the
+#      returned XML back into this folder.
+#
+# Source of truth:
+#   Nothing here is authoritative. Service facts come from /docs/repository-catalog.yaml,
+#   integrations and external systems come from /docs/integration-catalog.yaml.
+#   This file only records selection and presentation choices.
+#
+# Security:
+#   The generated description records authentication MECHANISMS and credential
+#   VARIABLE NAMES only. It must never contain credential values, tokens or keys.
+
+config_version: 1
+updated_at_utc: "2026-11-19T00:00:00Z"
+
+output:
+  # One self-contained prompt file per ticked diagram. Each file must stand alone
+  # because it is pasted into a separate next-ai-draw-io conversation.
+  prompt_folder: "draw-io-generation/prompts/"
+  prompt_naming_convention: "<diagram-id>.md  e.g. system-context.md, flow-air-quality-alerts.md"
+  # Index listing every generated prompt and what it covers.
+  index_file: "draw-io-generation/prompts/README.md"
+  # Uncertainties and questions to take to the team (see uncertainty section below).
+  open_questions_file: "draw-io-generation/open-questions.md"
+  xml_output_folder: "draw-io-generation/"
+  xml_naming_convention: "<diagram-id>.drawio.xml  e.g. system-context.drawio.xml"
+
+# ---------------------------------------------------------------------------
+# Presentation options for the generated description
+# ---------------------------------------------------------------------------
+options:
+  # Verbosity of each prompt file. One of: low | medium | high
+  #   low    — node names, groupings and edge direction only. Shortest prompt,
+  #            cleanest diagram, good for exec/overview audiences.
+  #   medium — adds the data that crosses each edge, protocol, cadence and
+  #            datastores. Endpoints are summarised and auth is a short tag.
+  #            Recommended default for team conversations.
+  #   high   — adds full endpoint paths, auth mechanisms, payload detail and
+  #            per-service notes. Longest prompt; risks a cluttered diagram and
+  #            may exceed the model's comfortable context in one turn.
+  # detail_level sets the baseline verbosity; the include_* toggles below decide
+  # which categories of information may appear at all.
+  detail_level: "medium"
+  # Show external providers (Met Office, Ricardo, OS, GOV.UK Notify, etc.) as
+  # source/sink nodes with the data extracted from them. Not mapped any deeper
+  # than the API/feed boundary.
+  include_external_data_sources:
+    include: "[X]"
+  # Protocol, direction, and endpoint paths for each internal edge.
+  include_protocols_and_endpoints:
+    include: "[X]"
+  # Auth mechanism per edge (mechanism name only — never values).
+  include_auth_mechanisms:
+    include: "[X]"
+  # Databases, caches and queues owned by each service.
+  include_datastores:
+    include: "[X]"
+  # Step-by-step narrative for each ticked journey (see journeys below).
+  include_journey_flows:
+    include: "[X]"
+  # Activity status / archived flags next to each service.
+  include_service_status:
+    include: "[X]"
+  # Mark edges that are provisional or inferred rather than confirmed.
+  include_confidence_flags:
+    include: "[X]"
+  # Scheduled vs on-demand cadence for ingestion edges.
+  include_ingestion_cadence:
+    include: "[X]"
+  # Append the uncertainties relevant to that diagram to the end of each prompt
+  # file, and write the consolidated list to the open_questions_file above.
+  include_uncertainty_list:
+    include: "[X]"
+  # Include edges the analysis actively refuted, so the team can confirm they
+  # really are absent rather than simply undiscovered.
+  include_refuted_edges:
+    include: "[X]"
+
+# ---------------------------------------------------------------------------
+# Certainty of integrations
+#
+# Every edge in /docs/integration-catalog.yaml carries a confidence level.
+# Uncertain edges are still drawn, but styled differently so it is obvious what
+# still needs confirming with the team.
+# At 2026-11-19 every one of the 65 edges in the catalogue is confirmed, so no edge
+# is drawn dashed or dotted. The provisional and inferred styles stay defined for
+# edges added later.
+# ---------------------------------------------------------------------------
+confidence_styling:
+  confirmed:
+    meaning: "Endpoint and caller identified in non-test source on the default branch."
+    style: "solid line, black, normal weight"
+    label_suffix: ""
+  provisional:
+    meaning: "Edge indicated by a configuration key or naming, target not fully verified."
+    style: "dashed line, grey (#999999)"
+    label_suffix: " (provisional — to confirm)"
+  inferred:
+    meaning: "Edge assumed from architecture/topology, requires owner confirmation."
+    style: "dotted line, grey (#999999)"
+    label_suffix: " (inferred — to confirm)"
+  # Ask next-ai to add a legend explaining the line styles.
+  include_legend:
+    include: "[X]"
+
+layout:
+  # How the description asks next-ai to cluster nodes.
+  # One of: product-line | domain | layer | journey
+  group_by: "product-line"
+  # Suggested diagram orientation: left-to-right | top-to-bottom
+  flow_direction: "left-to-right"
+  # Requested diagrams. One prompt file is written per ticked entry; per-journey
+  # produces one prompt file per ticked journey below.
+  requested_diagrams:
+    - id: system-context
+      include: "[X]"
+      description: "All ticked services, their domains and the external systems they call."
+    - id: data-flow
+      include: "[X]"
+      description: "How data moves: external sources in, through services, out to citizens."
+    - id: service-dependencies
+      include: "[X]"
+      description: "Internal service-to-service edges only, with endpoints labelled."
+    - id: atom-feed-measurement-collection
+      include: "[X]"
+      description: >-
+        Deep dive on how historic measurements are fetched live from the DEFRA UK-AIR
+        INSPIRE Atom download service, including verified vs unverified records.
+        Always generated at high detail regardless of detail_level.
+    - id: per-journey
+      include: "[X]"
+      description: "One sequence-style diagram per ticked journey below."
+
+# ---------------------------------------------------------------------------
+# Journeys (end-to-end flows documented in /docs/diagrams/generated/)
+# ---------------------------------------------------------------------------
+journeys:
+  - id: citizen-check-air-quality
+    include: "[X]"
+    description: "The primary public journey on check-air-quality.service.gov.uk."
+  - id: data-ingestion
+    include: "[X]"
+    description: "Scheduled ingestion of measurement and forecast data into the estate."
+  - id: historic-data-download
+    include: "[X]"
+    description: "Asynchronous historic extract request, emailed download link."
+  - id: air-quality-alerts
+    include: "[X]"
+    description: "Alert subscription, verification, dispatch and opt-out."
+  - id: smoke-control
+    include: "[X]"
+    description: "Smoke control appliance and fuel applications arriving from DEFRA Forms."
+
+# ---------------------------------------------------------------------------
+# Repositories — grouped by product line, most significant first
+# ---------------------------------------------------------------------------
+repository_groups:
+
+  - group: core-citizen-service
+    label: "Core citizen service"
+    description: "The main 'Check air quality' product and the backend that feeds it."
+    repositories:
+      - include: "[X]"
+        name: aqie-front-end
+        type: "Core Frontend Service"
+        status: Active
+        role: "Public GOV.UK service where citizens check air quality for a location."
+      - include: "[X]"
+        name: aqie-back-end
+        type: "Core Backend Service"
+        status: Active
+        role: "Caches Ricardo station data and per-station DAQI, and reads Ricardo live to serve current readings and station history."
+
+  - group: air-quality-alerts
+    label: "Air quality alerts"
+    description: "Subscription capture, alert generation and citizen messaging."
+    repositories:
+      - include: "[X]"
+        name: aqie-alert-back-end-service
+        type: "Auxilary Backend Service"
+        status: Monitoring
+        role: "Owns alert subscriber state and decides when an alert is due."
+      - include: "[X]"
+        name: aqie-notify-service
+        type: "Auxilary Backend Service"
+        status: Monitoring
+        role: "Only holder of the GOV.UK Notify key — the sole route to contact a citizen."
+      - include: "[X]"
+        name: aqie-forecast-api
+        type: "Auxilary Backend Service"
+        status: Monitoring
+        role: "Collects Met Office forecast files over SFTP and serves forecast data."
+
+  - group: historic-data-and-location
+    label: "Historic data download and location lookup"
+    description: "Data selector journey and the shared location / station services behind it."
+    repositories:
+      - include: "[X]"
+        name: aqie-dataselector-frontend
+        type: "Auxilary Frontend"
+        status: Active
+        role: "Citizen UI for finding stations, viewing recent readings and requesting historic air quality extracts."
+      - include: "[X]"
+        name: aqie-historicaldata-backend
+        type: "Auxilary Backend Service"
+        status: Active
+        role: "Builds historic measurement extracts (the estate's only C#/.NET service)."
+      - include: "[X]"
+        name: aqie-location-backend
+        type: "Auxilary Backend Service"
+        status: Active
+        role: "Wraps Ordnance Survey Names API for place-name and location resolution."
+      - include: "[X]"
+        name: aqie-monitoringstation-backend
+        type: "Auxilary Backend Service"
+        status: Active
+        role: "Aggregates aqie-back-end and aqie-location-backend for station lookups."
+
+  - group: smoke-control-register
+    label: "Smoke control register"
+    description: "Exempt appliances and authorised fuels, with a caseworker review interface."
+    repositories:
+      - include: "[X]"
+        name: aqie-dc-backend
+        type: "Auxilary Backend Service"
+        status: Active
+        role: "Owns the appliance/fuel dataset and case lifecycle; consumes DEFRA Forms via SQS."
+      - include: "[X]"
+        name: aqie-dc-admin-frontend
+        type: "Auxilary Frontend"
+        status: Active
+        role: "Internal caseworker interface for reviewing applications; Microsoft Entra sign-in enforced."
+      - include: "[X]"
+        name: aqie-dc-frontend
+        type: "Auxilary Frontend"
+        status: Inactive
+        role: "Public read-only search over the smoke control register; calls routes the backend does not serve (oq-006)."
+
+  - group: air-quality-maps
+    label: "Air quality maps"
+    description: "Interactive map view of air quality data."
+    repositories:
+      - include: "[X]"
+        name: aqie-maps-frontend
+        type: "Auxilary Frontend"
+        status: Active
+        role: "Map interface over station and DAQI data from aqie-back-end and forecasts from aqie-forecast-api; links to and from aqie-dataselector-frontend."
+
+  - group: pollutant-release-register
+    label: "Pollutant release and transfer register (PRTR)"
+    description: "Industrial facility pollutant release data, and two unconnected submissions scaffolds."
+    repositories:
+      - include: "[X]"
+        name: aqie-prtr-frontend
+        type: "Auxilary Frontend"
+        status: Active
+        role: "Citizen UI for searching industrial pollutant releases."
+      - include: "[X]"
+        name: aqie-prtr-backend
+        type: "Auxilary Backend Service"
+        status: Active
+        role: "Owns the industrial facility pollutant release dataset."
+      - include: "[X]"
+        name: aqie-prtr-submissions-frontend
+        type: "Auxilary Frontend"
+        status: Active
+        role: "CDP template scaffold for a PRTR submissions service; no submission feature and no connection to any other service (oq-032)."
+      - include: "[X]"
+        name: aqie-prtr-submissions-backend
+        type: "Auxilary Backend Service"
+        status: Active
+        role: "CDP template scaffold for a PRTR submissions service; health and example routes only, no connection to any other service (oq-032)."
+
+  - group: analytics-and-reporting
+    label: "Analytics and reporting support"
+    description: "Supporting tools that consume data rather than serve the core journeys."
+    repositories:
+      - include: "[X]"
+        name: aqie-laqm-data-explorer
+        type: "Data/Analytics Support Service"
+        status: Monitoring
+        role: "Explorer over the external LAQM Portal API; no AQIE service dependencies."
+      - include: "[X]"
+        name: aqie-kpi-metrics-dashboard
+        type: "Data/Analytics Support Service"
+        status: Inactive
+        role: "KPI and metrics dashboard for the estate."
+
+  - group: demo-services
+    label: "Demo services"
+    repositories:
+      - include: "[ ]"
+        name: aqie-demo-data-visualisations
+        type: "Demo Service"
+        status: Active
+        role: "Demonstration visualisations that read the Ricardo UK-AIR API directly."
+
+  - group: prototypes-and-pocs
+    label: "Prototypes and proofs of concept"
+    description: "Not production services. Tick only if you want the experimental estate shown."
+    repositories:
+      - include: "[ ]"
+        name: aqie-maps-prototype
+        type: "Prototype Service (including PoC)"
+        status: Monitoring
+        role: "Superseded map prototype; predecessor of aqie-maps-frontend."
+      - include: "[ ]"
+        name: aqie-dc-poc-frontend
+        type: "Prototype Service (including PoC)"
+        status: Archived
+        role: "Archived smoke control prototype scaffold (frontend)."
+      - include: "[ ]"
+        name: aqie-dc-poc-backend
+        type: "Prototype Service (including PoC)"
+        status: Archived
+        role: "Archived smoke control prototype scaffold (backend)."
+      - include: "[ ]"
+        name: aqie-docanalysispoc-backend
+        type: "Prototype Service (including PoC)"
+        status: Inactive
+        role: "Document analysis PoC backend; calls Azure OpenAI / AWS Bedrock."
+      - include: "[ ]"
+        name: aqie-docanalysispoc-frontend
+        type: "Prototype Service (including PoC)"
+        status: Inactive
+        role: "Document analysis PoC frontend (superseded)."
+      - include: "[ ]"
+        name: aqie-docanalysisawspoc-frontend
+        type: "Prototype Service (including PoC)"
+        status: Inactive
+        role: "AWS variant of the document analysis PoC frontend."
+
+  - group: quality-and-performance-testing
+    label: "Quality and performance testing"
+    description: >-
+      Repositories that exercise the estate rather than form part of it at runtime.
+      Usually leave unticked for architecture diagrams.
+    repositories:
+      - include: "[ ]"
+        name: aqie-privatebeta-test
+        type: "Quality/Test Service"
+        status: Monitoring
+        role: "WebdriverIO journey tests against aqie-front-end (best maintained suite)."
+      - include: "[ ]"
+        name: aqie-prtr-journey-tests
+        type: "Quality/Test Service"
+        status: Active
+        role: "WebdriverIO journey tests against aqie-prtr-frontend."
+      - include: "[ ]"
+        name: aqie-privatebeta-perftest
+        type: "Quality/Test Service"
+        status: Monitoring
+        role: "JMeter performance tests against aqie-front-end, notify and alert services."
+      - include: "[ ]"
+        name: aqie-privatebeta-api-perftest
+        type: "Quality/Test Service"
+        status: Monitoring
+        role: "JMeter performance tests against the aqie-back-end API and Ricardo alerts; the plan still exercises the removed /forecasts and /measurements endpoints."
+      - include: "[ ]"
+        name: aqie-prtr-perftest
+        type: "Quality/Test Service"
+        status: Monitoring
+        role: "JMeter scaffold for PRTR; currently unconfigured."
+      - include: "[ ]"
+        name: aqie-data-privatebeta-perftest
+        type: "Quality/Test Service"
+        status: Inactive
+        role: "JMeter performance tests against the aqie-dataselector-frontend UI."
+      - include: "[ ]"
+        name: aqie-data-priv-beta-api-perftest
+        type: "Quality/Test Service"
+        status: Inactive
+        role: "JMeter performance tests against location, monitoring station and historic data APIs."
+      - include: "[ ]"
+        name: aqie-publicbeta-test
+        type: "Quality/Test Service"
+        status: Inactive
+        role: "WebdriverIO suite; redundant subset of aqie-privatebeta-test."
+      - include: "[ ]"
+        name: aqie-performance-test
+        type: "Quality/Test Service"
+        status: Inactive
+        role: "Abandoned JMeter repository; test plan is empty."
+      - include: "[ ]"
+        name: aqie-dataselector-perf-frontend
+        type: "Quality/Test Service"
+        status: Archived
+        role: "Archived performance fork of the data selector frontend."
+      - include: "[ ]"
+        name: aqie-historicaldata-perf-backend
+        type: "Quality/Test Service"
+        status: Archived
+        role: "Archived performance fork of the historic data backend."
+      - include: "[ ]"
+        name: aqie-location-perf-backend
+        type: "Quality/Test Service"
+        status: Archived
+        role: "Archived performance fork of the location backend."
+      - include: "[ ]"
+        name: aqie-monitorstation-perf-backend
+        type: "Quality/Test Service"
+        status: Archived
+        role: "Archived performance fork of the monitoring station backend."
+
+  - group: archived-and-retired
+    label: "Archived and retired"
+    description: "Kept for lineage. Tick only if you want historical context on the diagram."
+    repositories:
+      - include: "[ ]"
+        name: aqie-data-service-backend
+        type: "Auxilary Backend Service"
+        status: Archived
+        role: "Split into aqie-location-backend and aqie-monitoringstation-backend."
+      - include: "[ ]"
+        name: AQIE-Citizen-Alpha
+        type: "Prototype Service (including PoC)"
+        status: Archived
+        role: "Original citizen alpha prototype (2023)."
+
+# ---------------------------------------------------------------------------
+# External systems and data sources
+#
+# Shown on the diagram as source/sink boundary nodes only: who owns them, what
+# data crosses the boundary, and how it is authenticated. We do not map anything
+# inside these systems.
+#
+# Ticking a service above does NOT automatically pull in its external sources —
+# tick them here as well.
+# ---------------------------------------------------------------------------
+external_systems:
+
+  - group: upstream-data-sources
+    label: "Upstream data sources (data into AQIE)"
+    systems:
+      - include: "[X]"
+        id: ricardo-ukair
+        name: "Ricardo UK-AIR API"
+        owner: "Ricardo Energy & Environment (on behalf of DEFRA)"
+        data_extracted: "Monitoring station metadata and pollutant measurements for AURN and affiliated networks."
+        interface: "HTTPS/REST, bearer token from a login endpoint"
+      - include: "[X]"
+        id: met-office-sftp
+        name: "Met Office forecast SFTP"
+        owner: "Met Office (files); hosting service operator to be confirmed"
+        data_extracted: "Air quality forecast files collected over SFTP: on a schedule by aqie-forecast-api, and on request (not stored) by aqie-back-end."
+        interface: "SFTP, SSH private key"
+      - include: "[X]"
+        id: ukair-website
+        name: "DEFRA UK-AIR public website"
+        owner: "DEFRA"
+        data_extracted: "Forecast RSS feed, read on a schedule by aqie-back-end. No AQIE service fetches the national forecast text summary page."
+        interface: "HTTPS, public"
+      - include: "[X]"
+        id: ukair-atom
+        name: "DEFRA UK-AIR INSPIRE Atom download service"
+        owner: "DEFRA"
+        data_extracted: "Historic fixed observation data as OM-SWE XML, per site and per year."
+        interface: "HTTPS Atom feed, public"
+      - include: "[X]"
+        id: defra-sos
+        name: "DEFRA Sensor Observation Service (SOS)"
+        owner: "DEFRA"
+        data_extracted: "Site and feature-of-interest listing and hourly air quality observations, swept hourly by aqie-back-end (output unread since PR #163, oq-019)."
+        interface: "OGC SOS over HTTPS, public"
+      - include: "[X]"
+        id: laqm-portal
+        name: "LAQM Portal API"
+        owner: "Operator unconfirmed (open question oq-007)"
+        data_extracted: "Local authority reference data, air quality management areas, annual status reports."
+        interface: "HTTPS/REST, API key and partner id headers"
+      - include: "[X]"
+        id: defra-forms
+        name: "DEFRA Forms"
+        owner: "DEFRA Forms team"
+        data_extracted: "Smoke control application submissions published onto an SQS queue."
+        interface: "AWS SQS, IAM task role"
+
+  - group: lookup-and-enrichment
+    label: "Lookup and enrichment services"
+    systems:
+      - include: "[X]"
+        id: os-names
+        name: "Ordnance Survey Names API"
+        owner: "Ordnance Survey"
+        data_extracted: "Place-name and gazetteer search results used to resolve user location input."
+        interface: "HTTPS/REST, API key"
+      - include: "[X]"
+        id: os-places-ni
+        name: "Ordnance Survey Places (Northern Ireland)"
+        owner: "Ordnance Survey"
+        data_extracted: "Northern Ireland postcode and address lookup."
+        interface: "HTTPS/REST, OAuth2 bearer token from Entra ID"
+      - include: "[X]"
+        id: postcodes-io
+        name: "postcodes.io"
+        owner: "Ideal Postcodes (open service)"
+        data_extracted: "Reverse geocoding of station coordinates to the owning local authority (aqie-back-end)."
+        interface: "HTTPS/REST, public"
+
+  - group: outbound-and-citizen-facing
+    label: "Outbound and citizen-facing systems (data out of AQIE)"
+    systems:
+      - include: "[X]"
+        id: govuk-notify
+        name: "GOV.UK Notify"
+        owner: "GDS"
+        data_extracted: "Outbound — alert and verification emails/SMS to citizens."
+        interface: "HTTPS/REST, API key"
+      - include: "[X]"
+        id: openfreemap
+        name: "OpenFreeMap"
+        owner: "Third party (open source tile service)"
+        data_extracted: "Browser-side vector map tiles and styles."
+        interface: "HTTPS, public, browser-side"
+      - include: "[ ]"
+        id: qualtrics
+        name: "Qualtrics"
+        owner: "DEFRA (survey tenant)"
+        data_extracted: "Outbound link only — user feedback surveys."
+        interface: "HTTPS outbound link"
+      - include: "[ ]"
+        id: google-tag-manager
+        name: "Google Tag Manager / Google Analytics"
+        owner: "DEFRA analytics tenant"
+        data_extracted: "Outbound — browser usage analytics, only after cookie consent."
+        interface: "HTTPS, browser-side"
+      - include: "[ ]"
+        id: jquery-cdn
+        name: "jQuery CDN"
+        owner: "jQuery project (OpenJS Foundation)"
+        data_extracted: "Outbound — the jQuery script is loaded by the citizen's browser; no AQIE data is sent."
+        interface: "HTTPS, public, browser-side, subresource integrity hash"
+
+  - group: platform-and-identity
+    label: "Platform and identity"
+    systems:
+      - include: "[X]"
+        id: cdp-uploader
+        name: "CDP Uploader"
+        owner: "DEFRA Core Delivery Platform"
+        data_extracted: "Virus-scanned file upload with callback notification to the owning service. aqie-dc-backend uses it only for the Excel register import, and its callback handler has been removed (oq-025)."
+        interface: "Platform-internal HTTP"
+      - include: "[X]"
+        id: azure-entra
+        name: "Microsoft Entra ID"
+        owner: "DEFRA IT"
+        data_extracted: "Staff sign-in to the smoke control caseworker interface (enforced since PR #19), and a client-credentials token for the aqie-front-end Northern Ireland lookup."
+        interface: "OpenID Connect / MSAL; OAuth2 client credentials"
+      - include: "[ ]"
+        id: model-providers
+        name: "Azure OpenAI and AWS Bedrock"
+        owner: "DEFRA (Azure tenant) / AWS"
+        data_extracted: "Business case summarisation for the archived document analysis PoC."
+        interface: "HTTPS/REST, API key or IAM"

@@ -19,7 +19,7 @@
 | Last main commit (UTC) | `2026-08-10T09:25:53Z` |
 | Last analysed commit | `e6ff1414` |
 | Last analysed (UTC) | `2026-09-15T00:00:00Z` |
-| Activity status | `Active` |
+| Activity status | `Monitoring` |
 
 ## 2. Purpose and Responsibilities
 
@@ -103,12 +103,9 @@ one cycle immediately at server start so a restart between ticks does not miss a
 | Ricardo UK-AIR API | External API | `GET /api/site_meta_datas` | Site metadata used to map `siteId` to a region | Bearer token |
 | `aqie-notify-service` | AQIE service | `POST /send-notification` | Recipient, Notify template id and personalisation out; notification id back | CDP internal network |
 | `aqie-forecast-api` | AQIE service | `GET /forecast` | Met Office DAQI forecast values with station coordinates | CDP internal network |
-| `aqie-front-end` | AQIE service | Link construction only — `/notify/unsubscribe-email-link` | Email identifier as a query parameter inside outgoing messages | Tokenised link |
+| `aqie-front-end` | AQIE service | Link construction only — `/notify/unsubscribe-email-link` | Email address as a plain query parameter inside outgoing messages | None: no token or signature, and the receiving route validates none (security finding 72, catalogue `oq-038`) |
 | check-air-quality.service.gov.uk | External (link) | Link construction only — `/location/{slug}?lang=` | Location deep link inside outgoing messages | None |
 | MongoDB | Datastore | Driver connection, `mongo-locks` for scheduler locking | Subscribers, alert state, audit records | `MONGO_URI` |
-
-> The `aqie-notify-service` and `aqie-forecast-api` edges are **not** yet recorded in
-> [`/docs/integration-catalog.yaml`](../../../integration-catalog.yaml) — see Section 11.
 
 ## 6. Consumed By (Inbound Dependencies)
 
@@ -117,11 +114,10 @@ one cycle immediately at server start so a restart between ticks does not miss a
 | `aqie-front-end` | `POST /setup-alert` | Verified contact, location name and coordinates, channel, language |
 | `aqie-front-end` | `DELETE /opt-out-email-alert` | Email address from the unsubscribe link |
 | `aqie-front-end` | `GET /aqsr-alert`, `GET /daqi-alert` | Current and historic breach data for the location and breaches pages |
+| `aqie-front-end` | `GET /api/subscriptions/{contact}` | SMS journey only: a phone number in, to count its subscriptions. **No matching route exists on this service**, so the call cannot succeed and the front end fails open (catalogue `oq-015`) |
 | `aqie-notify-service` | `DELETE /opt-out-sms-alert` | Phone number of a citizen who replied STOP by SMS |
 
 > Edges are mastered in [`/docs/integration-catalog.yaml`](../../../integration-catalog.yaml).
-> Only the `aqie-notify-service` edge is currently recorded there; the `aqie-front-end` edges
-> are evidenced in this analysis but missing from the catalogue — see Section 11.
 
 ## 7. Data
 
@@ -213,17 +209,11 @@ Variable names only — values are held in CDP secrets and never recorded here.
       `src/users/utils/ricardoApiClient.js` sets `rejectUnauthorized: false` whenever
       `NODE_ENV` is not `production`, to tolerate the Ricardo staging certificate. Confirm
       no non-production CDP environment carries citizen data through that path.
-- [ ] **Catalogue gap:** `aqie-alert-back-end-service → aqie-notify-service`
-      (`POST /send-notification`) is the single delivery path for every alert, yet it is not
-      in `docs/integration-catalog.yaml`.
-- [ ] **Catalogue gap:** `aqie-alert-back-end-service → aqie-forecast-api` (`GET /forecast`)
-      drives the daily forecast alert and is not in the catalogue.
-- [ ] **Catalogue gap:** `aqie-front-end → aqie-alert-back-end-service`
-      (`POST /setup-alert`, `DELETE /opt-out-email-alert`, `GET /aqsr-alert`,
-      `GET /daqi-alert`) is not in the catalogue.
-- [ ] `aqie-front-end` is configured with a subscription-count path of `/api/subscriptions`
-      against this service's base URL, but no such route exists here. Confirm whether the
-      route was removed, renamed, or never built.
+- [ ] In the SMS journey only, `aqie-front-end` calls `GET /api/subscriptions/{contact}` on
+      this service to count a phone number's subscriptions, but no such route exists here
+      (catalogue `oq-015`). The front end fails open, so that journey skips the
+      maximum-locations check at this step. Confirm whether to add the route here or remove
+      the call and rely on the `400` from `POST /setup-alert`, as the email journey does.
 - [ ] `RICARDO_API_USE_MOCK` defaults to `true`, pointing both alert feeds at public WireMock
       Cloud stubs. Confirm it is explicitly set to `false` in `prod`.
 - [ ] Opt-out deletes the whole `USERS` document, so a citizen unsubscribing from one

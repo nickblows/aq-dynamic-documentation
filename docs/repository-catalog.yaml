@@ -1,11 +1,11 @@
 catalog_version: 4
-updated_at_utc: "2026-09-15T13:13:26Z"
+updated_at_utc: "2026-11-19T20:09:27Z"
 analysis_branch_policy: "main-only"
 discovery:
   source_url: "https://api.github.com/search/repositories?q=org:DEFRA+aqie+in:name"
   source_org: "DEFRA"
   source_query: "aqie in:name"
-  discovered_at_utc: "2026-09-15T13:13:26Z"
+  discovered_at_utc: "2026-11-19T20:09:27Z"
 type_taxonomy:
   - "Core Frontend Service"
   - "Core Backend Service"
@@ -33,8 +33,8 @@ repositories:
     created_at_utc: "2023-07-21T13:44:21Z"
     last_modified_at_utc: "2023-07-31T15:25:36Z"
     activity_status: "Archived"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "f7fbb115"
     connected_services: []
     documentation_path: "/docs/services/citizen/AQIE-Citizen-Alpha/service-profile.md"
   - service_domain: "Data"
@@ -46,9 +46,9 @@ repositories:
     primary_language: "JavaScript"
     created_at_utc: "2025-12-09T23:57:53Z"
     last_modified_at_utc: "2026-08-10T09:25:53Z"
-    activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    activity_status: "Monitoring"
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "e6ff1414"
     connected_services:
       - "aqie-forecast-api"
       - "aqie-front-end"
@@ -62,12 +62,12 @@ repositories:
     archived: false
     primary_language: "JavaScript"
     created_at_utc: "2024-02-26T14:51:38Z"
-    last_modified_at_utc: "2026-08-25T15:29:11Z"
+    last_modified_at_utc: "2026-11-16T14:41:25Z"
     activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-11-19T00:00:00Z"
+    last_analysed_main_commit: "77a030c3"
     connected_services:
-      - "aqie-demo-data-visualisations"
+      - "aqie-dataselector-frontend"
       - "aqie-front-end"
       - "aqie-maps-frontend"
       - "aqie-maps-prototype"
@@ -83,8 +83,8 @@ repositories:
     created_at_utc: "2025-04-11T16:13:49Z"
     last_modified_at_utc: "2025-05-07T22:45:49Z"
     activity_status: "Inactive"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "d0c93d0"
     connected_services: []
     documentation_path: "/docs/services/shared/aqie-data-priv-beta-api-perftest/service-profile.md"
   - service_domain: "Shared"
@@ -97,8 +97,8 @@ repositories:
     created_at_utc: "2025-04-03T11:58:55Z"
     last_modified_at_utc: "2026-02-05T09:14:40Z"
     activity_status: "Inactive"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "adff3e0"
     connected_services: []
     documentation_path: "/docs/services/shared/aqie-data-privatebeta-perftest/service-profile.md"
   - service_domain: "Data"
@@ -111,8 +111,8 @@ repositories:
     created_at_utc: "2025-01-23T12:55:51Z"
     last_modified_at_utc: "2025-02-20T13:28:22Z"
     activity_status: "Archived"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "3a686fd0"
     connected_services: []
     documentation_path: "/docs/services/data/aqie-data-service-backend/service-profile.md"
   - service_domain: "Citizen"
@@ -123,13 +123,15 @@ repositories:
     archived: false
     primary_language: "JavaScript"
     created_at_utc: "2025-02-14T11:11:56Z"
-    last_modified_at_utc: "2026-09-15T10:34:28Z"
+    last_modified_at_utc: "2026-11-19T08:45:23Z"
     activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-11-19T00:00:00Z"
+    last_analysed_main_commit: "41776ca8"
     connected_services:
+      - "aqie-back-end"
       - "aqie-historicaldata-backend"
       - "aqie-location-backend"
+      - "aqie-maps-frontend"
       - "aqie-monitoringstation-backend"
     documentation_path: "/docs/services/citizen/aqie-dataselector-frontend/service-profile.md"
   - service_domain: "Shared"
@@ -142,8 +144,8 @@ repositories:
     created_at_utc: "2025-03-17T14:36:03Z"
     last_modified_at_utc: "2025-04-10T15:16:14Z"
     activity_status: "Archived"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "cd566d8a"
     connected_services: []
     documentation_path: "/docs/services/shared/aqie-dataselector-perf-frontend/service-profile.md"
   - service_domain: "Citizen"
@@ -154,10 +156,10 @@ repositories:
     archived: false
     primary_language: "JavaScript"
     created_at_utc: "2026-02-03T13:46:12Z"
-    last_modified_at_utc: "2026-09-15T08:44:45Z"
+    last_modified_at_utc: "2026-11-18T12:30:08Z"
     activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-11-19T00:00:00Z"
+    last_analysed_main_commit: "04050215"
     connected_services:
       - "aqie-dc-backend"
     documentation_path: "/docs/services/citizen/aqie-dc-admin-frontend/service-profile.md"
@@ -169,10 +171,10 @@ repositories:
     archived: false
     primary_language: "JavaScript"
     created_at_utc: "2026-01-26T16:18:03Z"
-    last_modified_at_utc: "2026-09-14T15:26:12Z"
+    last_modified_at_utc: "2026-11-17T13:57:09Z"
     activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-11-19T00:00:00Z"
+    last_analysed_main_commit: "49f950cd"
     connected_services:
       - "aqie-dc-admin-frontend"
       - "aqie-dc-frontend"
@@ -186,9 +188,9 @@ repositories:
     primary_language: "JavaScript"
     created_at_utc: "2026-01-26T16:15:20Z"
     last_modified_at_utc: "2026-04-21T09:16:55Z"
-    activity_status: "Monitoring"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    activity_status: "Inactive"
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "0100dc25"
     connected_services:
       - "aqie-dc-backend"
     documentation_path: "/docs/services/citizen/aqie-dc-frontend/service-profile.md"
@@ -197,13 +199,13 @@ repositories:
     type: "Prototype Service (including PoC)"
     repository_url: "https://github.com/DEFRA/aqie-dc-poc-backend"
     default_branch: "main"
-    archived: false
+    archived: true
     primary_language: "JavaScript"
     created_at_utc: "2026-05-14T09:00:24Z"
     last_modified_at_utc: "2026-05-14T09:00:44Z"
-    activity_status: "Monitoring"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    activity_status: "Archived"
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "fa3f4448"
     connected_services: []
     documentation_path: "/docs/services/data/aqie-dc-poc-backend/service-profile.md"
   - service_domain: "Citizen"
@@ -211,13 +213,13 @@ repositories:
     type: "Prototype Service (including PoC)"
     repository_url: "https://github.com/DEFRA/aqie-dc-poc-frontend"
     default_branch: "main"
-    archived: false
+    archived: true
     primary_language: "JavaScript"
     created_at_utc: "2026-05-14T09:32:37Z"
     last_modified_at_utc: "2026-05-14T09:32:58Z"
-    activity_status: "Monitoring"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    activity_status: "Archived"
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "38e62e1f"
     connected_services: []
     documentation_path: "/docs/services/citizen/aqie-dc-poc-frontend/service-profile.md"
   - service_domain: "Citizen"
@@ -228,12 +230,11 @@ repositories:
     archived: false
     primary_language: "JavaScript"
     created_at_utc: "2026-07-30T09:05:21Z"
-    last_modified_at_utc: "2026-09-09T10:11:22Z"
+    last_modified_at_utc: "2026-10-07T09:10:49Z"
     activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
-    connected_services:
-      - "aqie-back-end"
+    last_analysed_at_utc: "2026-11-19T00:00:00Z"
+    last_analysed_main_commit: "7f8d8f53"
+    connected_services: []
     documentation_path: "/docs/services/citizen/aqie-demo-data-visualisations/service-profile.md"
   - service_domain: "Citizen"
     service_name: "aqie-docanalysisawspoc-frontend"
@@ -245,8 +246,8 @@ repositories:
     created_at_utc: "2025-07-23T13:45:53Z"
     last_modified_at_utc: "2025-12-17T16:10:49Z"
     activity_status: "Inactive"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "3765abbe"
     connected_services:
       - "aqie-docanalysispoc-backend"
     documentation_path: "/docs/services/citizen/aqie-docanalysisawspoc-frontend/service-profile.md"
@@ -260,8 +261,8 @@ repositories:
     created_at_utc: "2025-07-22T15:17:31Z"
     last_modified_at_utc: "2025-10-29T16:35:46Z"
     activity_status: "Inactive"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "74bfe45d"
     connected_services:
       - "aqie-docanalysisawspoc-frontend"
       - "aqie-docanalysispoc-frontend"
@@ -276,8 +277,8 @@ repositories:
     created_at_utc: "2025-07-17T10:17:38Z"
     last_modified_at_utc: "2025-08-21T08:01:20Z"
     activity_status: "Inactive"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "b8889c1c"
     connected_services:
       - "aqie-docanalysispoc-backend"
     documentation_path: "/docs/services/citizen/aqie-docanalysispoc-frontend/service-profile.md"
@@ -291,8 +292,8 @@ repositories:
     created_at_utc: "2025-05-15T16:09:09Z"
     last_modified_at_utc: "2026-06-08T17:08:07Z"
     activity_status: "Monitoring"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "cdaaf94d"
     connected_services:
       - "aqie-alert-back-end-service"
       - "aqie-front-end"
@@ -307,10 +308,10 @@ repositories:
     archived: false
     primary_language: "JavaScript"
     created_at_utc: "2024-02-02T11:30:20Z"
-    last_modified_at_utc: "2026-09-02T16:29:50Z"
+    last_modified_at_utc: "2026-11-05T09:47:13Z"
     activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-11-19T00:00:00Z"
+    last_analysed_main_commit: "210c0c03"
     connected_services:
       - "aqie-alert-back-end-service"
       - "aqie-back-end"
@@ -325,10 +326,10 @@ repositories:
     archived: false
     primary_language: "C#"
     created_at_utc: "2025-02-24T09:44:07Z"
-    last_modified_at_utc: "2026-09-09T12:25:08Z"
+    last_modified_at_utc: "2026-11-18T14:41:24Z"
     activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-11-19T00:00:00Z"
+    last_analysed_main_commit: "73a763ab"
     connected_services:
       - "aqie-dataselector-frontend"
       - "aqie-notify-service"
@@ -343,8 +344,8 @@ repositories:
     created_at_utc: "2025-03-17T16:29:02Z"
     last_modified_at_utc: "2025-03-27T10:27:22Z"
     activity_status: "Archived"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "8af8680"
     connected_services: []
     documentation_path: "/docs/services/shared/aqie-historicaldata-perf-backend/service-profile.md"
   - service_domain: "Shared"
@@ -357,8 +358,8 @@ repositories:
     created_at_utc: "2026-02-09T14:20:50Z"
     last_modified_at_utc: "2026-03-11T11:28:24Z"
     activity_status: "Inactive"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "814e9948"
     connected_services: []
     documentation_path: "/docs/services/shared/aqie-kpi-metrics-dashboard/service-profile.md"
   - service_domain: "Citizen"
@@ -370,9 +371,9 @@ repositories:
     primary_language: "HTML"
     created_at_utc: "2026-06-30T09:35:15Z"
     last_modified_at_utc: "2026-07-08T14:16:27Z"
-    activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    activity_status: "Monitoring"
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "5b10202a"
     connected_services: []
     documentation_path: "/docs/services/citizen/aqie-laqm-data-explorer/service-profile.md"
   - service_domain: "Data"
@@ -383,10 +384,10 @@ repositories:
     archived: false
     primary_language: "JavaScript"
     created_at_utc: "2025-02-14T10:54:54Z"
-    last_modified_at_utc: "2026-05-19T15:31:48Z"
-    activity_status: "Monitoring"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_modified_at_utc: "2026-10-29T12:35:11Z"
+    activity_status: "Active"
+    last_analysed_at_utc: "2026-11-19T00:00:00Z"
+    last_analysed_main_commit: "5f1beb5f"
     connected_services:
       - "aqie-dataselector-frontend"
       - "aqie-monitoringstation-backend"
@@ -402,8 +403,8 @@ repositories:
     created_at_utc: "2025-03-17T15:35:44Z"
     last_modified_at_utc: "2025-03-20T15:39:56Z"
     activity_status: "Archived"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "1ea50ace"
     connected_services: []
     documentation_path: "/docs/services/shared/aqie-location-perf-backend/service-profile.md"
   - service_domain: "Citizen"
@@ -414,12 +415,13 @@ repositories:
     archived: false
     primary_language: "JavaScript"
     created_at_utc: "2026-06-08T14:38:15Z"
-    last_modified_at_utc: "2026-08-25T08:32:08Z"
+    last_modified_at_utc: "2026-11-18T11:27:49Z"
     activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-11-19T00:00:00Z"
+    last_analysed_main_commit: "13a9eb7f"
     connected_services:
       - "aqie-back-end"
+      - "aqie-dataselector-frontend"
       - "aqie-forecast-api"
     documentation_path: "/docs/services/citizen/aqie-maps-frontend/service-profile.md"
   - service_domain: "Citizen"
@@ -432,8 +434,8 @@ repositories:
     created_at_utc: "2026-05-05T09:31:43Z"
     last_modified_at_utc: "2026-06-05T15:31:51Z"
     activity_status: "Monitoring"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "1b9a8a53"
     connected_services:
       - "aqie-back-end"
       - "aqie-forecast-api"
@@ -446,10 +448,10 @@ repositories:
     archived: false
     primary_language: "JavaScript"
     created_at_utc: "2025-02-14T11:07:48Z"
-    last_modified_at_utc: "2026-03-18T12:21:35Z"
-    activity_status: "Inactive"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_modified_at_utc: "2026-11-16T09:56:46Z"
+    activity_status: "Active"
+    last_analysed_at_utc: "2026-11-19T00:00:00Z"
+    last_analysed_main_commit: "ad63bb7f"
     connected_services:
       - "aqie-back-end"
       - "aqie-dataselector-frontend"
@@ -465,8 +467,8 @@ repositories:
     created_at_utc: "2025-03-17T16:09:22Z"
     last_modified_at_utc: "2025-03-17T16:09:37Z"
     activity_status: "Archived"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "8fe70b2b"
     connected_services: []
     documentation_path: "/docs/services/shared/aqie-monitorstation-perf-backend/service-profile.md"
   - service_domain: "Data"
@@ -479,8 +481,8 @@ repositories:
     created_at_utc: "2025-09-16T08:51:18Z"
     last_modified_at_utc: "2026-05-28T08:59:17Z"
     activity_status: "Monitoring"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "1646e247"
     connected_services:
       - "aqie-alert-back-end-service"
       - "aqie-front-end"
@@ -496,8 +498,8 @@ repositories:
     created_at_utc: "2024-08-15T14:52:08Z"
     last_modified_at_utc: "2024-08-21T12:17:55Z"
     activity_status: "Inactive"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "ad5f448"
     connected_services: []
     documentation_path: "/docs/services/shared/aqie-performance-test/service-profile.md"
   - service_domain: "Shared"
@@ -509,9 +511,9 @@ repositories:
     primary_language: "Shell"
     created_at_utc: "2024-09-06T09:00:05Z"
     last_modified_at_utc: "2026-07-23T22:15:02Z"
-    activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    activity_status: "Monitoring"
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "30ce55d"
     connected_services: []
     documentation_path: "/docs/services/shared/aqie-privatebeta-api-perftest/service-profile.md"
   - service_domain: "Shared"
@@ -523,9 +525,9 @@ repositories:
     primary_language: "HTML"
     created_at_utc: "2024-08-21T14:03:33Z"
     last_modified_at_utc: "2026-08-19T07:54:43Z"
-    activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    activity_status: "Monitoring"
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "f710950"
     connected_services: []
     documentation_path: "/docs/services/shared/aqie-privatebeta-perftest/service-profile.md"
   - service_domain: "Shared"
@@ -537,9 +539,9 @@ repositories:
     primary_language: "JavaScript"
     created_at_utc: "2024-03-15T14:40:24Z"
     last_modified_at_utc: "2026-08-06T12:20:53Z"
-    activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    activity_status: "Monitoring"
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "2e6f998"
     connected_services: []
     documentation_path: "/docs/services/shared/aqie-privatebeta-test/service-profile.md"
   - service_domain: "Data"
@@ -550,10 +552,10 @@ repositories:
     archived: false
     primary_language: "JavaScript"
     created_at_utc: "2026-05-21T11:02:19Z"
-    last_modified_at_utc: "2026-07-23T14:41:04Z"
+    last_modified_at_utc: "2026-10-26T16:50:55Z"
     activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-11-19T00:00:00Z"
+    last_analysed_main_commit: "caf106fe"
     connected_services:
       - "aqie-location-backend"
       - "aqie-prtr-frontend"
@@ -566,10 +568,10 @@ repositories:
     archived: false
     primary_language: "JavaScript"
     created_at_utc: "2026-05-21T11:01:50Z"
-    last_modified_at_utc: "2026-07-23T14:40:22Z"
+    last_modified_at_utc: "2026-10-26T16:49:06Z"
     activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-11-19T00:00:00Z"
+    last_analysed_main_commit: "ad0ec2f6"
     connected_services:
       - "aqie-prtr-backend"
     documentation_path: "/docs/services/citizen/aqie-prtr-frontend/service-profile.md"
@@ -583,8 +585,8 @@ repositories:
     created_at_utc: "2026-05-20T18:06:10Z"
     last_modified_at_utc: "2026-08-21T16:09:41Z"
     activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "3916684"
     connected_services: []
     documentation_path: "/docs/services/shared/aqie-prtr-journey-tests/service-profile.md"
   - service_domain: "Shared"
@@ -596,11 +598,39 @@ repositories:
     primary_language: "Shell"
     created_at_utc: "2026-06-19T12:09:39Z"
     last_modified_at_utc: "2026-06-19T12:09:52Z"
-    activity_status: "Active"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    activity_status: "Monitoring"
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "a6688f5"
     connected_services: []
     documentation_path: "/docs/services/shared/aqie-prtr-perftest/service-profile.md"
+  - service_domain: "Data"
+    service_name: "aqie-prtr-submissions-backend"
+    type: "Auxilary Backend Service"
+    repository_url: "https://github.com/DEFRA/aqie-prtr-submissions-backend"
+    default_branch: "main"
+    archived: false
+    primary_language: "JavaScript"
+    created_at_utc: "2026-10-26T14:43:39Z"
+    last_modified_at_utc: "2026-11-09T16:27:11Z"
+    activity_status: "Active"
+    last_analysed_at_utc: "2026-11-19T00:00:00Z"
+    last_analysed_main_commit: "04620b7e"
+    connected_services: []
+    documentation_path: "/docs/services/data/aqie-prtr-submissions-backend/service-profile.md"
+  - service_domain: "Citizen"
+    service_name: "aqie-prtr-submissions-frontend"
+    type: "Auxilary Frontend"
+    repository_url: "https://github.com/DEFRA/aqie-prtr-submissions-frontend"
+    default_branch: "main"
+    archived: false
+    primary_language: "JavaScript"
+    created_at_utc: "2026-10-23T14:56:50Z"
+    last_modified_at_utc: "2026-11-09T14:28:41Z"
+    activity_status: "Active"
+    last_analysed_at_utc: "2026-11-19T00:00:00Z"
+    last_analysed_main_commit: "b6e229d7"
+    connected_services: []
+    documentation_path: "/docs/services/citizen/aqie-prtr-submissions-frontend/service-profile.md"
   - service_domain: "Shared"
     service_name: "aqie-publicbeta-test"
     type: "Quality/Test Service"
@@ -611,7 +641,7 @@ repositories:
     created_at_utc: "2024-08-29T13:44:32Z"
     last_modified_at_utc: "2025-11-28T14:28:33Z"
     activity_status: "Inactive"
-    last_analysed_at_utc: null
-    last_analysed_main_commit: null
+    last_analysed_at_utc: "2026-09-15T00:00:00Z"
+    last_analysed_main_commit: "8412841"
     connected_services: []
     documentation_path: "/docs/services/shared/aqie-publicbeta-test/service-profile.md"

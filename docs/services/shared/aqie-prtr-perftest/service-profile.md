@@ -18,7 +18,7 @@
 | Last main commit (UTC) | `2026-06-19T12:09:52Z` |
 | Last analysed commit | `a6688f5` |
 | Last analysed (UTC) | `2026-09-15T00:00:00Z` |
-| Activity status | `Inactive` |
+| Activity status | `Monitoring` |
 
 ## 2. Purpose and Responsibilities
 

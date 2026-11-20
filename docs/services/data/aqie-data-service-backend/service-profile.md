@@ -77,7 +77,7 @@ services was straightforward.
 
 | Target | Type | Endpoint / Mechanism | Data exchanged | Auth |
 |---|---|---|---|---|
-| `aqie-back-end` | AQIE service | `GET /measurements` | Current pollutant concentrations per station | CDP internal network |
+| `aqie-back-end` | AQIE service | `GET /measurements` — **endpoint removed by [PR #163](https://github.com/DEFRA/aqie-back-end/pull/163); this call would now 404** | Current pollutant concentrations per station | CDP internal network |
 | Ordnance Survey Names API | External API | Place-name search | Place name in; candidate locations out | API key from configuration |
 | MongoDB | Datastore | Driver connection | Present via the CDP template; no domain collections written | `MONGO_URI` |
 
@@ -104,7 +104,7 @@ Variable **names** only.
 |---|---|
 | `PORT`, `NODE_ENV`, `SERVICE_VERSION` | Runtime identity |
 | `OSPlace_API_URL` | Ordnance Survey Names endpoint |
-| `MEASUREMENTS_API_URL` | `aqie-back-end` measurements endpoint |
+| `MEASUREMENTS_API_URL` | **Dead config.** Pointed at `aqie-back-end` `/measurements`, removed by [PR #163](https://github.com/DEFRA/aqie-back-end/pull/163) |
 | `MONGO_URI`, `MONGO_DATABASE` | MongoDB connection |
 | `CDP_HTTP_PROXY`, `CDP_HTTPS_PROXY` | CDP egress proxy |
 | `ENABLE_SECURE_CONTEXT`, `TRUSTSTORE_ONE` | TLS trust store |

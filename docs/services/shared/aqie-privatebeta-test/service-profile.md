@@ -18,7 +18,7 @@
 | Last main commit (UTC) | `2026-08-06T12:20:53Z` |
 | Last analysed commit | `2e6f998` |
 | Last analysed (UTC) | `2026-09-15T00:00:00Z` |
-| Activity status | `Active` |
+| Activity status | `Monitoring` |
 
 ## 2. Purpose and Responsibilities
 
@@ -77,8 +77,11 @@ This is a test harness and exposes no API.
 | BrowserStack | External | Remote WebDriver grid | Browser sessions | `BROWSERSTACK_USER` / `BROWSERSTACK_KEY` |
 | AWS S3 | Datastore | `RESULTS_OUTPUT_S3_PATH` | Allure report upload | CDP task role |
 
-> Note that the suite calls the **new** Ricardo host `api-ukair.defra.gov.uk`, whereas
-> `aqie-back-end` still defaults to the staging host. See the open question below.
+> Note that the suite calls the **new** Ricardo host `api-ukair.defra.gov.uk`. `aqie-back-end`
+> carries the supplier's staging host only as a code default: per CDP environment
+> configuration all four of its Ricardo URL variables are set in its service-wide defaults,
+> none is overridden per environment and none points at the staging host (catalogue `oq-012`,
+> now low). See the open question below.
 
 ## 6. Consumed By (Inbound Dependencies)
 
@@ -142,7 +145,11 @@ Variable names only — values are held in CDP secrets and never recorded here.
       and the underlying accounts rotated.
 - [ ] **Personal data.** The same file commits a real UK mobile number and a real webmail
       address used as the alert test account. Confirm ownership and move to secrets.
-- [ ] This suite uses `api-ukair.defra.gov.uk` while `aqie-back-end` defaults to the Ricardo
-      staging host. Which is authoritative for production?
+- [ ] Which Ricardo host is authoritative for production? This suite uses
+      `api-ukair.defra.gov.uk`. In `aqie-back-end`, all four Ricardo URL variables are set in
+      the service-wide defaults, none is overridden per environment and none points at the
+      supplier's staging host, per CDP environment configuration, so the earlier concern is
+      largely answered (catalogue `oq-012`, now low). The staging host survives in
+      `aqie-back-end` only as a code default, so removing a variable would silently select it.
 - [ ] Should this suite run on a schedule rather than on demand?
 - [ ] `aqie-publicbeta-test` duplicates a subset of these specs. Confirm it can be archived.

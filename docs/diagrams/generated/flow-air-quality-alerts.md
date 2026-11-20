@@ -4,9 +4,9 @@
 
 # Citizen: air quality alert subscription and delivery
 
-_Generated 2026-09-15T13:13:57Z from `/docs/integration-catalog.yaml`._
+_Generated 2026-11-19T20:10:05Z from `/docs/integration-catalog.yaml`._
 
-Subscription capture, verification, alert dispatch and opt-out. aqie-alert-back-end-service owns subscriber state; aqie-notify-service owns the messaging edge and is the only holder of the GOV.UK Notify key.
+Subscription capture, verification, alert dispatch and opt-out. aqie-alert-back-end-service owns subscriber state; aqie-notify-service owns the messaging edge and is the only holder of the GOV.UK Notify key. SMS opt-out routes through the notify service and email opt-out through the front end (oq-005).
 
 ```mermaid
 sequenceDiagram
@@ -25,8 +25,9 @@ sequenceDiagram
   aqie_notify_service->>govuk_notify: Send one-time code or magic link
   govuk_notify->>Citizen: Verification code or link
   Citizen->>aqie_front_end: Enter the code or follow the link
-  aqie_front_end->>aqie_notify_service: POST /subscribe/validate-otp or GET /subscribe/validate-link/{uuid}
+  aqie_front_end->>aqie_notify_service: POST /subscribe/validate-otp or GET /subscribe/validate-link/{token}
   aqie_notify_service->>aqie_front_end: Verification result and pending subscription
+  aqie_front_end->>aqie_alert_back_end_service: GET /api/subscriptions/{contact} — SMS only, not served (oq-015)
   aqie_front_end->>aqie_alert_back_end_service: POST /setup-alert
   aqie_alert_back_end_service->>MongoDB: Persist subscriber record (USERS)
   aqie_alert_back_end_service->>aqie_notify_service: POST /send-notification — confirmation message
@@ -39,4 +40,6 @@ sequenceDiagram
   Citizen->>govuk_notify: Reply "STOP" by SMS
   aqie_notify_service->>govuk_notify: GET /process-sms-replies — collect inbound replies
   aqie_notify_service->>aqie_alert_back_end_service: DELETE /opt-out-sms-alert
+  Citizen->>aqie_front_end: Email opt-out: follow the unsubscribe link (plain address in the link, no token — oq-038)
+  aqie_front_end->>aqie_alert_back_end_service: DELETE /opt-out-email-alert — removes the whole subscriber record
 ```

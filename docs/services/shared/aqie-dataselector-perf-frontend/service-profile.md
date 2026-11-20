@@ -80,6 +80,10 @@ static asset routes.
 | `aqie-data-service-backend` | AQIE service (archived) | `/osnameplaces/userLocation=` | Dead configuration; host no longer exists | — |
 | Redis | Datastore | Session cache | Server-side session state | `REDIS_PASSWORD` |
 
+The live `aqie-location-backend` and `aqie-monitoringstation-backend` now accept
+`POST /osnameplaces` and `POST /monitoringstation` with a JSON body instead of these
+pre-August 2025 GET forms (ticket `aqd-727`).
+
 ## 6. Consumed By (Inbound Dependencies)
 
 None. It was driven directly by load-testing tooling.

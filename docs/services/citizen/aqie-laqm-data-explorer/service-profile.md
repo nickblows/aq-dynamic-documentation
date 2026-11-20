@@ -19,7 +19,7 @@
 | Last main commit (UTC) | `2026-07-08T14:16:27Z` |
 | Last analysed commit | `5b10202a` |
 | Last analysed (UTC) | `2026-09-15T00:00:00Z` |
-| Activity status | `Active` |
+| Activity status | `Monitoring` |
 
 ## 2. Purpose and Responsibilities
 
@@ -93,8 +93,8 @@ JavaScript beyond the GOV.UK Frontend bundle.
 | LAQM Portal API (UK-AIR) | External API | `GET /xapi/getTop3AQAPMeasuresByYear/{laId}/{year}/json` | Top three action plan measures, available from 2025 | Same |
 
 > `LAQM_API_BASE_URL` points at the public LAQM Portal (`www.laqmportal.co.uk`), **not** at an
-> AQIE service. This answers catalogue open question `oq-004`. The edge is not yet recorded in
-> the integration catalogue.
+> AQIE service. This answers catalogue open question `oq-004`, and the edge is recorded in the
+> integration catalogue (`laqm-data-explorer__laqm-portal`).
 
 ## 6. Consumed By (Inbound Dependencies)
 

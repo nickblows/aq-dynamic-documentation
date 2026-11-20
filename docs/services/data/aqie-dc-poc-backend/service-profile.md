@@ -11,7 +11,7 @@
 | Repository | [`DEFRA/aqie-dc-poc-backend`](https://github.com/DEFRA/aqie-dc-poc-backend) |
 | Service domain | `Data` |
 | Service type | `Prototype Service (including PoC)` |
-| Lifecycle stage | `Prototype/PoC` |
+| Lifecycle stage | `Archived` |
 | Primary language | JavaScript |
 | Runtime | Node.js `>=24` (ES modules), pinned to `v24.14.1` in `.nvmrc` |
 | Default branch | `main` |
@@ -19,9 +19,12 @@
 | Last main commit (UTC) | `2026-05-14T09:00:44Z` |
 | Last analysed commit | `fa3f4448` |
 | Last analysed (UTC) | `2026-09-15T00:00:00Z` |
-| Activity status | `Monitoring` |
+| Activity status | `Archived` |
 
 ## 2. Purpose and Responsibilities
+
+> **Archived.** Archived on GitHub since the previous analysis (first observed 2026-11-17).
+> There have been no commits to `main` since 2026-05-14. Retained for reference. Do not deploy.
 
 **Does:**
 
@@ -137,8 +140,8 @@ Environment variable names only — never values.
 - [ ] Confirm the intended relationship with `aqie-dc-backend`. This repository was created
       after the live service and contains no domain code, so "proof of concept" may not
       describe what it actually is.
-- [ ] Is this repository still needed? If it was a scaffold that was never taken forward, it
-      should be archived so it stops appearing as an active DC service.
+- [x] Is this repository still needed? Answered by the owners: it has been archived on
+      GitHub, so it no longer appears as an active DC service.
 - [ ] Confirm whether it has ever been deployed to a CDP environment, and if so whether the
       environment and its MongoDB instance can be decommissioned.
 - [ ] Confirm there is no shared MongoDB instance with `aqie-dc-backend` — the two declare

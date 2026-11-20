@@ -70,4 +70,8 @@ containing a `service-profile.md`.
 ## Status
 
 Documentation is derived from static analysis of public `main` branches and has not yet
-been reviewed by service owners. Open questions are tracked in the integration catalogue.
+been reviewed by service owners. A small number of statements come from private deployment
+configuration; each is limited to variable names and set, unset or true/false states, and is
+tagged `per CDP environment configuration`. Open questions are tracked in the integration
+catalogue. The whole set was last reconciled with the default branches on 2026-11-19; see the
+[audit log](audit/audit-log.md).

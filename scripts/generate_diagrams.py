@@ -172,28 +172,36 @@ def data_flows(catalog: dict) -> None:
                 ("aqie-front-end", "os-names", "GET /search/names/v1/find — resolve place to coordinates"),
                 ("os-names", "aqie-front-end", "Matched places with coordinates"),
                 ("aqie-front-end", "aqie-back-end", "GET /monitoringStationInfo — stations near coordinates"),
-                ("aqie-back-end", "aqie-front-end", "Station metadata and pollutants measured"),
-                ("aqie-front-end", "aqie-back-end", "GET /measurements — current pollutant concentrations"),
-                ("aqie-back-end", "aqie-front-end", "Concentrations and DAQI bands"),
-                ("aqie-front-end", "aqie-forecast-api", "GET /forecast — multi-day outlook"),
-                ("aqie-forecast-api", "aqie-front-end", "Forecast DAQI by day and region"),
-                ("aqie-front-end", "ukair-website", "GET /ajax/forecast_text_summary.php"),
-                ("ukair-website", "aqie-front-end", "National forecast narrative"),
+                ("aqie-back-end", "ricardo-ukair", "POST /api/login_check, GET /api/site_meta_datas"),
+                ("aqie-back-end", "ricardo-ukair", "GET /api/pollutant_measurement_datas — 5 calls per station"),
+                ("aqie-back-end", "aqie-front-end", "Station metadata and current pollutant concentrations"),
+                ("aqie-front-end", "aqie-forecast-api", "GET /forecast — multi-day outlook and forecast summary"),
+                ("aqie-forecast-api", "aqie-front-end", "Forecast DAQI by day and region, and the forecast summary text"),
+                ("aqie-front-end", "aqie-front-end", "Calculate pollutant bands and map forecast days to bands and advice"),
                 ("aqie-front-end", "Citizen", "Rendered location page with DAQI, pollutants and forecast"),
             ],
         },
         "data-ingestion": {
             "title": "Scheduled air quality data ingestion",
-            "desc": "How measurement and forecast data enters the estate. Runs on cron schedules, not on user request.",
+            "desc": (
+                "How measurement and forecast data enters the estate. Runs on cron schedules, "
+                "not on user request. The UK-AIR sweep and the forecast feed in aqie-back-end "
+                "are still written to MongoDB, but nothing has read them since the "
+                "/measurements and /forecasts endpoints were removed."
+            ),
             "steps": [
-                ("Scheduler", "aqie-back-end", "Cron trigger (AURN_SCHEDULE, POLLUTANTS_SCHEDULE, MONITORING_STATIONS_SCHEDULE)"),
+                ("Scheduler", "aqie-back-end", "Cron trigger (MONITORING_STATIONS_SCHEDULE and at start-up, AURN_SCHEDULE)"),
                 ("aqie-back-end", "ricardo-ukair", "POST /api/login_check — obtain bearer token"),
                 ("ricardo-ukair", "aqie-back-end", "Bearer token"),
-                ("aqie-back-end", "ricardo-ukair", "GET /api/site_meta_datas, /api/pollutant_metadatas"),
-                ("aqie-back-end", "ricardo-ukair", "GET /api/pollutant_measurement_datas"),
-                ("ricardo-ukair", "aqie-back-end", "Station metadata and pollutant time series"),
+                ("aqie-back-end", "ricardo-ukair", "GET /api/site_meta_datas, /api/pollutant_metadatas — stations and instrument dates"),
                 ("aqie-back-end", "postcodes-io", "GET /postcodes — resolve station local authority"),
-                ("aqie-back-end", "MongoDB", "Upsert stations, pollutants and measurements"),
+                ("aqie-back-end", "MongoDB", "Replace the monitoringStations cache"),
+                ("aqie-back-end", "ricardo-ukair", "GET /api/pollutant_measurement_datas — yesterday and today, five stations at a time"),
+                ("aqie-back-end", "MongoDB", "Upsert per-station DAQI (aurnMeasurements)"),
+                ("Scheduler", "aqie-back-end", "Cron trigger (POLLUTANTS_SCHEDULE hourly, FORECAST_SCHEDULE)"),
+                ("aqie-back-end", "defra-sos", "GET site listing, then SOS GetObservation for each site"),
+                ("aqie-back-end", "ukair-website", "GET /assets/rss/forecast.xml"),
+                ("aqie-back-end", "MongoDB", "Write measurements and forecasts — no reader since PR 163"),
                 ("Scheduler", "aqie-forecast-api", "Cron trigger (FORECAST_SCHEDULE)"),
                 ("aqie-forecast-api", "met-office-sftp", "SFTP poll configured directory"),
                 ("met-office-sftp", "aqie-forecast-api", "Forecast files"),
@@ -202,19 +210,35 @@ def data_flows(catalog: dict) -> None:
         },
         "historic-data-download": {
             "title": "Citizen: download historic air quality data",
-            "desc": "Asynchronous extract journey — the citizen requests data and receives a download link by email.",
+            "desc": (
+                "Two journeys share one service: by station (search, recent-readings tabs and "
+                "per-pollutant downloads) and custom dataset (filters, then an extract job). "
+                "A single-year extract downloads directly once the job completes; multi-year "
+                "requests, and any job still running after three minutes, are emailed."
+            ),
             "steps": [
-                ("Citizen", "aqie-dataselector-frontend", "Choose pollutants, years and locations"),
+                ("Citizen", "aqie-dataselector-frontend", "By station: search a place name or postcode"),
                 ("aqie-dataselector-frontend", "aqie-location-backend", "POST /osnameplaces — resolve location"),
-                ("aqie-dataselector-frontend", "aqie-monitoringstation-backend", "POST /monitoringstation — find stations"),
-                ("aqie-monitoringstation-backend", "aqie-back-end", "GET /monitoringStationInfo + /measurements"),
-                ("aqie-dataselector-frontend", "aqie-historicaldata-backend", "GET /AtomDataSelectionPollutantMaster"),
-                ("aqie-dataselector-frontend", "aqie-historicaldata-backend", "POST /AtomDataSelection — request extract"),
-                ("aqie-historicaldata-backend", "aqie-dataselector-frontend", "Job reference"),
-                ("aqie-dataselector-frontend", "aqie-historicaldata-backend", "POST /AtomDataSelectionJobStatus — poll"),
+                ("aqie-dataselector-frontend", "aqie-monitoringstation-backend", "POST /monitoringstation — find nearby stations"),
+                ("aqie-monitoringstation-backend", "aqie-back-end", "GET /monitoringStationInfo — station list"),
+                ("aqie-dataselector-frontend", "aqie-back-end", "GET /monitoringStationHistory — last 24 hours and 7 days"),
+                ("aqie-dataselector-frontend", "aqie-historicaldata-backend", "POST /AtomHistoryHourlydata — single-station download link"),
+                ("Citizen", "aqie-dataselector-frontend", "Custom dataset: choose pollutants, data sources and locations"),
+                ("aqie-dataselector-frontend", "laqm-portal", "GET /xapi/getLocalAuthorities/json — local authority list"),
+                ("aqie-dataselector-frontend", "aqie-historicaldata-backend", "GET region and agglomeration masters, POST /AtomDataSelection for station counts"),
+                ("aqie-dataselector-frontend", "aqie-historicaldata-backend", "POST /AtomDataSelection — create the extract job"),
+                ("aqie-dataselector-frontend", "aqie-historicaldata-backend", "POST /AtomDataSelectionJobStatus — poll every 2 s for up to 3 min"),
+                ("aqie-historicaldata-backend", "ukair-atom", "GET observation XML per site and year"),
                 ("aqie-historicaldata-backend", "AWS S3", "Stage generated extract"),
-                ("aqie-dataselector-frontend", "aqie-historicaldata-backend", "POST /AtomDataSelectionPresignedUrlMail"),
-                ("aqie-historicaldata-backend", "Citizen", "Email containing a pre-signed download link"),
+                ("aqie-dataselector-frontend", "Citizen", "Pre-signed download link once the job completes"),
+                ("Citizen", "aqie-dataselector-frontend", "Email path: enter an email address (multi-year or after 3 min)"),
+                ("aqie-dataselector-frontend", "aqie-historicaldata-backend", "POST /AtomEmailJobDataSelection — register the email job"),
+                ("aqie-historicaldata-backend", "aqie-notify-service", "POST /send-notification — background sweep re-runs the extract, then emails"),
+                ("aqie-notify-service", "govuk-notify", "Send the email"),
+                ("govuk-notify", "Citizen", "Email linking to the frontend page /download_emailreq/id/timestamp"),
+                ("Citizen", "aqie-dataselector-frontend", "Follow the link (rejected after 48 hours)"),
+                ("aqie-dataselector-frontend", "aqie-historicaldata-backend", "POST /AtomDataSelectionPresignedUrlMail — fresh pre-signed URL"),
+                ("aqie-dataselector-frontend", "Citizen", "Download page with the pre-signed link"),
             ],
         },
         "air-quality-alerts": {
@@ -222,7 +246,9 @@ def data_flows(catalog: dict) -> None:
             "desc": (
                 "Subscription capture, verification, alert dispatch and opt-out. "
                 "aqie-alert-back-end-service owns subscriber state; aqie-notify-service "
-                "owns the messaging edge and is the only holder of the GOV.UK Notify key."
+                "owns the messaging edge and is the only holder of the GOV.UK Notify key. "
+                "SMS opt-out routes through the notify service and email opt-out through "
+                "the front end (oq-005)."
             ),
             "steps": [
                 ("Citizen", "aqie-front-end", "Choose alert locations and contact method"),
@@ -230,8 +256,9 @@ def data_flows(catalog: dict) -> None:
                 ("aqie-notify-service", "govuk-notify", "Send one-time code or magic link"),
                 ("govuk-notify", "Citizen", "Verification code or link"),
                 ("Citizen", "aqie-front-end", "Enter the code or follow the link"),
-                ("aqie-front-end", "aqie-notify-service", "POST /subscribe/validate-otp or GET /subscribe/validate-link/{uuid}"),
+                ("aqie-front-end", "aqie-notify-service", "POST /subscribe/validate-otp or GET /subscribe/validate-link/{token}"),
                 ("aqie-notify-service", "aqie-front-end", "Verification result and pending subscription"),
+                ("aqie-front-end", "aqie-alert-back-end-service", "GET /api/subscriptions/{contact} — SMS only, not served (oq-015)"),
                 ("aqie-front-end", "aqie-alert-back-end-service", "POST /setup-alert"),
                 ("aqie-alert-back-end-service", "MongoDB", "Persist subscriber record (USERS)"),
                 ("aqie-alert-back-end-service", "aqie-notify-service", "POST /send-notification — confirmation message"),
@@ -244,29 +271,33 @@ def data_flows(catalog: dict) -> None:
                 ("Citizen", "govuk-notify", 'Reply "STOP" by SMS'),
                 ("aqie-notify-service", "govuk-notify", "GET /process-sms-replies — collect inbound replies"),
                 ("aqie-notify-service", "aqie-alert-back-end-service", "DELETE /opt-out-sms-alert"),
+                ("Citizen", "aqie-front-end", "Email opt-out: follow the unsubscribe link (plain address in the link, no token — oq-038)"),
+                ("aqie-front-end", "aqie-alert-back-end-service", "DELETE /opt-out-email-alert — removes the whole subscriber record"),
             ],
         },
         "smoke-control": {
             "title": "Smoke control: appliance and fuel applications",
             "desc": (
                 "Applications arrive asynchronously from DEFRA Forms over SQS, not through "
-                "the AQIE frontend. The public frontend is read-only search; the admin "
-                "frontend is the caseworker review interface."
+                "the AQIE frontend. The admin frontend is the caseworker review and "
+                "certification interface and requires sign-in on every route. The public "
+                "frontend calls routes the backend does not serve, so the public register "
+                "may currently be broken (oq-006). The CDP Uploader import flow in the "
+                "backend no longer completes, because its callback has been removed (oq-025)."
             ),
             "steps": [
-                ("Applicant", "defra-forms", "Complete the smoke control application form"),
+                ("Applicant", "defra-forms", "Complete the appliance or fuel application form"),
                 ("defra-forms", "aqie-dc-backend", "SQS message on aqie-dc-queue"),
-                ("aqie-dc-backend", "aqie-dc-backend", "Long-poll every 5 min, map form fields, split repeaters"),
-                ("aqie-dc-backend", "MongoDB", "Create application and appliance or fuel records"),
-                ("aqie-dc-backend", "cdp-uploader", "POST /initiate then /upload-and-scan/{uploadId}"),
-                ("cdp-uploader", "aqie-dc-backend", "POST /upload-callback — scan outcome with bucket and key"),
-                ("aqie-dc-backend", "AWS S3", "Read scanned evidence"),
+                ("aqie-dc-backend", "aqie-dc-backend", "Long-poll (default every 15 min), store the message, map form fields, split repeaters"),
+                ("aqie-dc-backend", "MongoDB", "Create application and appliance or fuel records, delete the message once handled"),
                 ("Caseworker", "aqie-dc-admin-frontend", "Sign in"),
                 ("aqie-dc-admin-frontend", "azure-entra", "OIDC authorisation code flow"),
-                ("aqie-dc-admin-frontend", "aqie-dc-backend", "Retrieve application case records"),
-                ("aqie-dc-admin-frontend", "aqie-dc-backend", "PATCH /appliances/{id}/technical-review"),
+                ("aqie-dc-admin-frontend", "aqie-dc-backend", "GET /applications/summary-by-status — read applications and items"),
+                ("aqie-dc-admin-frontend", "aqie-dc-backend", "PATCH .../technical-review and .../checks — record review decisions"),
+                ("aqie-dc-admin-frontend", "aqie-dc-backend", "PATCH /applications/{id}/complete — complete the application"),
+                ("aqie-dc-admin-frontend", "aqie-dc-backend", "PATCH /appliances/{id}/certification/{country} and /visibility — publish decisions"),
                 ("Citizen", "aqie-dc-frontend", "Search the published register"),
-                ("aqie-dc-frontend", "aqie-dc-backend", "GET /get-all/{type}, GET /get/{type}/{id}"),
+                ("aqie-dc-frontend", "aqie-dc-backend", "GET /get-all/{type}, GET /get/{type}/{id} — not served (oq-006)"),
             ],
         },
     }

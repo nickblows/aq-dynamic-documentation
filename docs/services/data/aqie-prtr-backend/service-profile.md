@@ -13,12 +13,12 @@
 | Service type | `Auxilary Backend Service` |
 | Lifecycle stage | `Beta` |
 | Primary language | JavaScript |
-| Runtime | Node.js `>=24` (ES modules) |
+| Runtime | Node.js `>=24` (ES modules); container parent image is Node 24.22.1 while `.nvmrc` still says `v24.14.1` |
 | Default branch | `main` |
 | Created (UTC) | `2026-05-21` |
-| Last main commit (UTC) | `2026-07-23T14:41:04Z` |
-| Last analysed commit | `4cff62c4` |
-| Last analysed (UTC) | `2026-09-15T00:00:00Z` |
+| Last main commit (UTC) | `2026-10-26T16:50:55Z` |
+| Last analysed commit | `caf106fe` |
+| Last analysed (UTC) | `2026-11-19T00:00:00Z` |
 | Activity status | `Active` |
 
 ## 2. Purpose and Responsibilities
@@ -37,8 +37,8 @@
 - Acts as a backend-for-frontend for place-name lookup, proxying `aqie-location-backend`
   and mapping its raw OS Names payload into a stable public shape.
 - Issues time-limited S3 pre-signed URLs for the published annual PRTR dataset XML files.
-- Ships an operator-run TSV ingest CLI (`scripts/tsv-ingest`) that loads the Ricardo
-  PRTR public export into MongoDB.
+- Ships a TSV ingest CLI (`scripts/tsv-ingest`) that loads the Ricardo PRTR public export into MongoDB.
+  Its own code describes it as a one-shot migration, run by hand.
 
 **Does not:**
 
@@ -50,8 +50,13 @@
   go through `aqie-location-backend`, which owns that credential.
 - Ingest PRTR data automatically. There is **no scheduler, cron job or queue consumer**
   in the running service; the TSV loaders are a manual CLI (see Section 7).
-- Generate the annual PRTR dataset XML files. It only lists and signs files that already
-  exist in its S3 bucket.
+- Generate or upload the annual PRTR dataset XML files. It only lists and signs files that
+  already exist in its S3 bucket, and never writes to the bucket.
+- Read the report year list from MongoDB. `GET /reports` serves a fixed list held in code.
+- Receive PRTR submissions. The `aqie-prtr-submissions-backend` and
+  `aqie-prtr-submissions-frontend` repositories created in October 2026 are unconnected
+  scaffolds: neither calls this service nor is called by it, and they share no database,
+  bucket or URL setting with it.
 
 ## 3. Architecture
 
@@ -72,9 +77,10 @@ delegation to a service module, and mapping of typed service errors (`LocationBa
 | Location BFF | `src/services/location-service.js`, `location-mapper.js` | Calls `aqie-location-backend` and normalises the response |
 | Coordinate helper | `src/services/coords.js` | Converts OS grid eastings/northings to WGS84 via `mt-osgridref` |
 | S3 access | `src/services/s3-service.js` | Object listing, metadata lookup by filename, pre-signed URL generation |
-| Reports | `src/services/reports-service.js` | Report year catalogue and download-link orchestration |
+| Reports | `src/services/reports-service.js` | Serves the fixed report year list and orchestrates download-link creation |
+| Report year list | `src/data/example-reports.js` | Fixed list of report years 2007 to 2025 with a `reportIsLive` flag (2025 is not live); despite its name this is live data, not a template leftover |
 | Plugins | `src/plugins/` | MongoDB connection, router, request logging, tracing, graceful shutdown |
-| Resilience helper | `src/common/helpers/fetch-with-retry.js` | Timeout and retry wrapper for outbound HTTP |
+| Resilience helper | `src/common/helpers/fetch-with-retry.js` | Timeout (10 seconds by default) and optional retry wrapper for outbound HTTP; no caller sets retries, so there are none |
 | TSV ingest CLI | `scripts/tsv-ingest/` | 18 ordered loaders, quarantine handling, index creation |
 | Config | `src/config.js` | `convict` schema for all endpoints, stores and limits |
 
@@ -90,21 +96,29 @@ delegation to a service module, and mapping of typed service errors (`LocationBa
 | `GET` | `/facilities/{id}/record/{year?}` | Release and transfer record; year defaults to the facility's latest reporting year | `id`, optional `year` | Facility header plus `releasesToAir`, `releasesToWater`, `releasesToSoil`, `transfersToWasteWater`, `wasteTransfers` |
 | `GET` | `/facilities/{id}/record/{year}/lines/{lineId}` | Detail of one release, transfer or waste line | `id`, `year`, `lineId` (`ricardoReleaseTransferId`) | Line detail, or `404` when not found |
 | `GET` | `/locations/search` | Place-name lookup proxied to `aqie-location-backend` | `q` (2–100 chars, restricted character set) | Normalised candidate locations with a `count` |
-| `GET` | `/reports` | Catalogue of published report years | — | Report records with `count` |
+| `GET` | `/reports` | Catalogue of report years | — | Report records (id, year, `reportIsLive`) with `count`, taken from a fixed list in code rather than MongoDB |
 | `GET` | `/reports/get-download-link/{year}` | Pre-signed download link for a year's dataset | `year` (integer, 2007 to current year) | `{ downloadLink }` |
 
 > The `README.md` API table is stale — it still lists the CDP template's `/example`
-> endpoints and does not describe any of the routes above.
+> endpoints and does not describe any of the routes above. The route descriptions for
+> `/reports` also say it checks S3 health and reads the database, which the handler does not do.
 
 ### Report download mechanism
 
-`/reports/get-download-link/{year}` first looks the S3 object key up in MongoDB. If the key
-is absent it falls back to scanning the bucket with `ListObjectsV2`, issuing a `HeadObject`
-per key and matching the object metadata field `encodedfilename` against the expected name
-pattern `uk_prtr_dataset_<year>.xml`. It then returns a `GetObject` pre-signed URL valid for
-9,000 seconds (150 minutes). Credentials come from the ECS task IAM role — the service holds
-no static AWS keys. The metadata scan is `O(objects)` HEAD requests and is a latency risk if
-the bucket grows; see Section 11.
+`/reports/get-download-link/{year}` is meant to look the S3 object key up in MongoDB first, but that
+lookup cannot succeed: it reads a collection named `Reports` for an `s3Key` field, the TSV loader writes a
+differently named `reports` collection, nothing writes `s3Key`, and the write-back that would cache the key
+is commented out. So every request scans the bucket with `ListObjectsV2`, issues a `HeadObject` per key
+and matches the object metadata field `encodedfilename` against the expected name
+`uk_prtr_dataset_<year>.xml`. It then returns a `GetObject` pre-signed URL valid for 9,000 seconds
+(150 minutes). Credentials come from the ECS task IAM role — the service holds no static AWS keys. The
+scan is `O(objects)` HEAD requests on every download and is a latency and cost risk if the bucket grows;
+see Section 11.
+
+The `encodedfilename` key is the user metadata that the CDP Uploader writes on the files it stores, and
+the uploader names objects by upload and file identifiers rather than by file name, which explains why the
+scan is needed. The files were therefore almost certainly uploaded through a CDP Uploader flow, although
+no PRTR repository calls the uploader.
 
 ## 5. Consumes (Outbound Dependencies)
 
@@ -112,7 +126,7 @@ the bucket grows; see Section 11.
 |---|---|---|---|---|
 | `aqie-location-backend` | AQIE service | `POST /osnameplaces` (`OSPLACE_API_URL`) | `{ userLocation }` in; OS Names matches out. Forwards the CDP trace header | CDP internal network; optional `x-api-key` from `OSPLACE_API_KEY` for ephemeral environments |
 | MongoDB | Datastore | Driver connection (`MONGO_URI`) | Facilities, facility reports, reference collections | Connection string |
-| AWS S3 | Datastore | `ListObjectsV2`, `HeadObject`, `GetObject` pre-sign (`S3_BUCKET`, `AWS_REGION`) | Annual PRTR dataset XML files | ECS task IAM role |
+| AWS S3 | Datastore | `ListObjectsV2`, `HeadObject`, `GetObject` pre-sign (`S3_BUCKET`, `AWS_REGION`); read-only | Annual PRTR dataset XML files | ECS task IAM role |
 
 ## 6. Consumed By (Inbound Dependencies)
 
@@ -121,8 +135,8 @@ the bucket grows; see Section 11.
 | `aqie-prtr-frontend` | `GET /facilities/search`, `GET /facilities/nearby`, `GET /facilities/{id}/details`, `GET /facilities/{id}/competent-authority`, `GET /facilities/{id}/record/{year?}`, `GET /facilities/{id}/record/{year}/lines/{lineId}`, `GET /locations/search`, `GET /reports`, `GET /reports/get-download-link/{year}` | Facility search results, facility records, place-name matches, report catalogue and pre-signed download links |
 
 > Edges are mastered in [`/docs/integration-catalog.yaml`](../../../integration-catalog.yaml).
-> The catalogue entry `prtr-frontend__prtr-backend` lists only four of the nine endpoints
-> actually called — see Section 11.
+> The catalogue entry `prtr-frontend__prtr-backend` lists all nine endpoints. No other service
+> calls this one; in particular the PRTR submissions services do not.
 
 ## 7. Data
 
@@ -130,9 +144,11 @@ the bucket grows; see Section 11.
   (`S3_BUCKET`) holding the published annual PRTR dataset XML files.
 - **Origin of the data: an offline manual load, not a live feed.** `scripts/tsv-ingest` is a
   CLI that reads a directory of tab-separated files from the Ricardo PRTR public export
-  (`TSV_DIR`) and upserts them into MongoDB. It is invoked by hand — locally, in CI, or
-  "inside a CDP break-glass session" per its own configuration comments. Nothing in the
-  running Hapi service triggers it; there is no cron, queue or webhook.
+  (`TSV_DIR`) and upserts them into MongoDB. It was added between June and July
+  2026 (merged in July as the data migration scripts) and its own comments call it a one-shot
+  migration. It is invoked by hand — locally, in CI, or "inside a CDP break-glass session" per its
+  own configuration comments. Nothing in the running Hapi service triggers it; there is no cron,
+  queue or webhook. Whether it has been run since the first load is not known.
 - **Ingest loaders:** 18 loaders run in an explicit `meta.order` sequence across three phases:
   - *reference* (orders 10–23) → `agencies`, `regulatory_authorities`, `pollutants`,
     `nace_codes`, `nuts_regions`, `activities`, `river_basin_districts`, `counties`,
@@ -156,7 +172,8 @@ the bucket grows; see Section 11.
     `pollutantTransfers`, and `wasteTransfers` (quantity, waste type code, treatment code).
     Each line carries a `ricardoReleaseTransferId`, which is the `lineId` exposed by the API.
   - **Reference collections** as listed above, plus `reports` (the year catalogue, from
-    `year.tsv`).
+    `year.tsv`). No API route reads it: `/reports` serves a fixed list in code, and the
+    download-link lookup queries a differently named `Reports` collection.
 - **Ingest safety:** loaders are idempotent upserts and stop on first failure. Rows whose
   column count deviates from the expected header width are written to a quarantine file
   rather than loaded — usually caused by embedded newlines in free-text fields. `--dry-run`
@@ -168,7 +185,9 @@ the bucket grows; see Section 11.
   indexes at start-up.
 - **Retention / refresh:** no automated refresh. The dataset changes only when an operator
   runs the ingest CLI against a new Ricardo export, and when new dataset XML files are
-  placed in the S3 bucket.
+  placed in the S3 bucket (almost certainly through the CDP Uploader; nothing in this service
+  or the PRTR frontend does it). The 2025 reporting year is listed but flagged not live.
+  There is no loader, scheduler or upload route for new annual data in any PRTR repository.
 - **Pollutant thresholds:** not yet available — the record service returns `threshold: null`
   because `pollutant_threshold` is absent from the Ricardo export.
 
@@ -195,14 +214,18 @@ Variable names only — values are held in CDP secrets and never recorded here.
 ## 9. Hosting and Deployment
 
 - **Platform:** DEFRA Core Delivery Platform (CDP) on AWS ECS.
-- **Container:** multi-stage build from `defradigital/node-development` to `defradigital/node`;
-  entrypoint `node src`.
-- **Internal address:** `https://aqie-prtr-backend.<env>.cdp-int.defra.cloud`.
+- **Container:** multi-stage build from `defradigital/node-development` to `defradigital/node`,
+  parent image `3.2.4-node24.22.1`; entrypoint `node src`.
+- **Internal address:** by CDP convention `https://aqie-prtr-backend.<env>.cdp-int.defra.cloud`. The
+  repository does not state it; the frontend takes it from `BACKEND_URL`.
 - **Local development:** `compose.yml` provides MongoDB, Redis and a `floci` container.
   Note the service itself does not use Redis — it is inherited from the CDP template.
 - **Pipelines:**
-  - `.github/workflows/check-pull-request.yml` — lint, test and SonarQube scan on PR
-  - `.github/workflows/publish.yml` — build and publish on push
+  - `.github/workflows/check-pull-request.yml` — security audit, format check, lint, tests and a
+    Docker build test on PR, plus a Sonar scan that runs only when `SONAR_TOKEN` is set and the
+    actor is not Dependabot
+  - `.github/workflows/publish.yml` — test, build and publish on push, then a Sonar scan that
+    does not fail the build
   - `.github/workflows/publish-hotfix.yml` — manual hotfix publish
 - **Testing:** `vitest` with `vitest-mongodb` and coverage; `npm run security-audit` runs
   `npm audit --audit-level=critical` in the pre-commit hook.
@@ -210,35 +233,46 @@ Variable names only — values are held in CDP secrets and never recorded here.
 ## 10. Observability
 
 - **Logging:** `pino` via `hapi-pino`, formatted with `@elastic/ecs-pino-format` in production.
-  Request/response bodies and auth headers are redacted in production.
+  In production the `authorization` and `cookie` request headers and all response headers are
+  removed from logs.
 - **Tracing:** `@defra/hapi-tracing` propagating the header named in `TRACING_HEADER`; the
   location-service client forwards it to `aqie-location-backend`.
 - **Metrics:** `@defra/cdp-metrics`.
-- **Auditing:** `@defra/cdp-auditing`.
+- **Auditing:** `@defra/cdp-auditing` is declared but never imported, so no audit events are
+  emitted.
 - **Shutdown:** `hapi-pulse` for graceful draining.
 - **Locking:** `mongo-locks` is a dependency and its index is created, but no ingest job runs
   in-process, so nothing currently takes a lock.
 
 ## 11. Open Questions
 
-- [ ] How is the annual PRTR dataset refreshed in production? Who runs `scripts/tsv-ingest`,
-      against which Ricardo export, and on what cadence? Is a break-glass session the
-      intended long-term mechanism or is an automated pipeline planned?
-- [ ] Who places the `uk_prtr_dataset_<year>.xml` files into the S3 bucket, and what sets the
-      `encodedfilename` object metadata the lookup relies on?
-- [ ] `scripts/tsv-ingest/config.js` defaults `TSV_DIR` to an individual developer's local
-      Windows path. Confirm this is only a convenience default and should be replaced.
+- [ ] Has `scripts/tsv-ingest` been run since the first load? Its own code calls it a one-shot
+      migration. If it is to be repeated, who runs it, against which Ricardo export and on what
+      cadence, and how will a new reporting year reach the register? The 2025 year is listed but
+      not live (`oq-010`).
+- [ ] The `encodedfilename` object metadata that the lookup relies on is the key the CDP Uploader
+      writes, so the `uk_prtr_dataset_<year>.xml` files were almost certainly uploaded through an
+      uploader flow. Which service or person initiates those uploads, and who produces the XML?
+      No PRTR repository calls the uploader (`oq-010`).
+- [ ] `scripts/tsv-ingest/config.js` defaults `TSV_DIR` to a developer's local Windows
+      user-profile path (the file header says no host-specific path is baked in). Confirm this is
+      only a convenience default and should be replaced.
 - [ ] `src/config.js` carries a `TODO: replace this commented code before going to prod`
       against the `OSPlaceApiUrl` block, and `location-service.js` carries a
       `TODO: remove when going to PROD` against the `x-api-key` header. Confirm the intended
       production configuration before go-live.
-- [ ] The pre-signed link fallback issues one `HeadObject` per bucket object. Confirm the
-      expected bucket size, or whether the S3 key should always be present in MongoDB.
+- [ ] The MongoDB shortcut for the S3 key cannot succeed (it reads a `Reports` collection for an
+      `s3Key` field that nothing writes, and the write-back is commented out), so every download
+      request issues one `HeadObject` per bucket object. Confirm the expected bucket size and
+      whether the shortcut should be fixed.
 - [ ] Pre-signed URLs last 150 minutes. Confirm this is an accepted exposure window for
       published open data.
 - [ ] Are pollutant reporting thresholds expected in a future Ricardo export? The record
       service returns `null` for every threshold today.
-- [ ] `src/plugins/mongodb.js` still creates an `example-data` index and `src/data/example-reports.js`
-      and `src/services/ExampleFind.js` remain from the CDP template. Confirm these can be removed.
-- [ ] The catalogue edge `prtr-frontend__prtr-backend` understates the API surface — see the
-      report in Section 6. Confirm the additional endpoints and update the catalogue.
+- [ ] `/reports` serves a fixed year list from `src/data/example-reports.js` although its route
+      description and commented-out code say it reads MongoDB. Should it read the `reports`
+      collection the ingest loads? `src/services/ExampleFind.js` (imported by nothing) and the
+      `example-data` index in `src/plugins/mongodb.js` are template leftovers that can be removed.
+- [ ] (catalogue `oq-032`) How will the PRTR submissions services relate to this service? They are unconnected
+      scaffolds today, so it is unknown whether submissions will be written to this database,
+      feed the TSV or XML route, or stay separate.

@@ -18,9 +18,14 @@
 | Last main commit (UTC) | `2026-02-05T09:14:40Z` |
 | Last analysed commit | `adff3e0` |
 | Last analysed (UTC) | `2026-09-15T00:00:00Z` |
-| Activity status | `Monitoring` |
+| Activity status | `Inactive` |
 
 ## 2. Purpose and Responsibilities
+
+> **Caution.** The recorded plans target an earlier version of the `aqie-dataselector-frontend`
+> interface. That interface has since changed, including the station page tabs and the
+> direct-download flow, so the plans may no longer match the journey a citizen now sees. They
+> have not been re-run for this documentation.
 
 **Does:**
 
@@ -69,8 +74,9 @@ This is a test harness and exposes no API.
 | AWS S3 | Datastore | `RESULTS_OUTPUT_S3_PATH` | JMeter dashboard and CSV results upload | CDP task role |
 
 > None of the `aqie-dataselector-frontend` routes above appear in
-> [`/docs/integration-catalog.yaml`](../../../integration-catalog.yaml), which currently
-> records only that service's outbound edges. They are a useful inventory of its surface.
+> [`/docs/integration-catalog.yaml`](../../../integration-catalog.yaml), which records that
+> service's outbound edges and one inbound link (`POST /station-summary`, from
+> `aqie-maps-frontend`). They are a useful inventory of its surface.
 
 ## 6. Consumed By (Inbound Dependencies)
 
